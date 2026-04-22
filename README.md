@@ -7,6 +7,7 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 - Permite configurar domínio fixo (ou usar a aba ativa).
 - Presets prontos: `tasy.circulosaude.com.br` e `tasyhml.circulosaude.com.br`.
 - Flag opcional para mostrar, no canto da tela do TASY, um badge com o servidor detectado (ex.: `_512` => `512`).
+- A badge só aparece em abas TASY (hostname contendo `tasy`).
 - Permite escolher o canto do badge: superior direito/esquerdo ou inferior direito/esquerdo.
 - Permite arrastar o badge com o mouse para qualquer ponto da tela (posição persistida).
 - Badge muda de cor automaticamente quando detecta oscilação/lentidão de resposta.

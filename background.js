@@ -6,6 +6,23 @@ function isHttpOrHttps(url) {
   return Boolean(url) && (url.startsWith("http://") || url.startsWith("https://"));
 }
 
+function isTasyHostname(hostname) {
+  return typeof hostname === "string" && hostname.toLowerCase().includes("tasy");
+}
+
+function isTasyTab(tab) {
+  if (!tab || !isHttpOrHttps(tab.url)) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(tab.url);
+    return isTasyHostname(parsed.hostname);
+  } catch (_error) {
+    return false;
+  }
+}
+
 function extractServerId(text) {
   const normalized = String(text || "").trim();
   if (!normalized) {
@@ -130,6 +147,10 @@ async function getServerBadgePayloadForTab(tab) {
   const badgeCoordinates = await getBadgeCoordinates();
   const enabled = await isServerFlagEnabled();
   if (!enabled) {
+    return { enabled: false, serverId: "-", badgePosition, badgeCoordinates };
+  }
+
+  if (!isTasyTab(tab)) {
     return { enabled: false, serverId: "-", badgePosition, badgeCoordinates };
   }
 

@@ -20,9 +20,11 @@ body {
 }
 
 .logo {
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
+  height: 20px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 h1 {
