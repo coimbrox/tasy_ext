@@ -10,7 +10,7 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 - Permite escolher o canto do badge: superior direito/esquerdo ou inferior direito/esquerdo.
 - Lê o valor atual de `TASYAPPSERVER_TASY`.
 - Permite informar um novo valor e salvar no mesmo cookie.
-- Após salvar o cookie, faz recarga forçada da aba ativa (equivalente ao `Ctrl+Shift+R`).
+- Ao salvar o cookie, executa recarga forçada antes e depois da troca (equivalente a `Ctrl+Shift+R` duas vezes).
 
 ## Pré-requisitos
 
@@ -39,7 +39,7 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 6. Clique em **Ler cookie** (ou aguarde leitura automática).
 7. Edite o campo **Novo valor**.
 8. Clique em **Salvar**.
-9. A aba ativa é recarregada automaticamente sem cache.
+9. A extensão faz recarga forçada, atualiza o cookie existente e faz nova recarga forçada.
 
 ## Arquivos
 

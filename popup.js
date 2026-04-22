@@ -38,6 +38,62 @@ function normalizeBadgePosition(position) {
   return validPositions.has(position) ? position : "bottom-right";
 }
 
+function normalizeCookieValue(value) {
+  const text = String(value || "");
+  try {
+    return decodeURIComponent(text);
+  } catch (_error) {
+    return text;
+  }
+}
+
+function cookieValueMatches(actualValue, expectedValue) {
+  return normalizeCookieValue(actualValue) === normalizeCookieValue(expectedValue);
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function stripLeadingDot(hostname) {
+  return String(hostname || "").replace(/^\./, "").toLowerCase();
+}
+
+function hostnameMatchesCookieDomain(hostname, cookieDomain) {
+  const normalizedHost = stripLeadingDot(hostname);
+  const normalizedCookieDomain = stripLeadingDot(cookieDomain);
+  return (
+    normalizedHost === normalizedCookieDomain ||
+    normalizedHost.endsWith(`.${normalizedCookieDomain}`)
+  );
+}
+
+function buildCookieUrlFromCookie(cookie, fallbackUrl) {
+  const fallback = new URL(fallbackUrl);
+  const hostname = stripLeadingDot(cookie.domain) || fallback.hostname;
+  const protocol = cookie.secure ? "https:" : fallback.protocol;
+  const path = cookie.path || "/";
+  return `${protocol}//${hostname}${path}`;
+}
+
+async function getEditableCookies(baseCookie, fallbackUrl) {
+  const parsed = new URL(fallbackUrl);
+  const hostname = parsed.hostname.toLowerCase();
+
+  const allSameName = await chrome.cookies.getAll({
+    name: COOKIE_NAME,
+    storeId: baseCookie.storeId
+  });
+
+  const scoped = allSameName.filter((cookie) => hostnameMatchesCookieDomain(hostname, cookie.domain));
+
+  if (scoped.length > 0) {
+    return scoped;
+  }
+
+  return [baseCookie];
+}
+
 async function getActiveTab() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   return tabs[0] || null;
@@ -181,6 +237,61 @@ async function getCookieByUrlHints(url, name) {
   return chrome.cookies.get({ url: alternateUrl, name });
 }
 
+async function getCookieByIdentity(savedCookie, fallbackUrl) {
+  if (!savedCookie) {
+    return getCookieByUrlHints(fallbackUrl, COOKIE_NAME);
+  }
+
+  const filters = {
+    name: COOKIE_NAME,
+    domain: savedCookie.domain,
+    path: savedCookie.path,
+    storeId: savedCookie.storeId
+  };
+
+  const list = await chrome.cookies.getAll(filters);
+  if (Array.isArray(list) && list.length > 0) {
+    return list[0];
+  }
+
+  return getCookieByUrlHints(fallbackUrl, COOKIE_NAME);
+}
+
+async function waitForUpdatedCookie(expectedValue, savedCookieHint, maxAttempts = 5) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const candidate = await getCookieByIdentity(savedCookieHint, targetCookieUrl);
+    if (candidate && cookieValueMatches(candidate.value, expectedValue)) {
+      return candidate;
+    }
+
+    if (attempt < maxAttempts) {
+      await delay(120);
+    }
+  }
+
+  return null;
+}
+
+async function updateExistingCookieValue(cookie, newValue, fallbackUrl) {
+  const details = {
+    url: buildCookieUrlFromCookie(cookie, fallbackUrl),
+    name: COOKIE_NAME,
+    value: newValue,
+    path: cookie.path,
+    secure: cookie.secure,
+    httpOnly: cookie.httpOnly,
+    sameSite: cookie.sameSite,
+    expirationDate: cookie.expirationDate,
+    storeId: cookie.storeId
+  };
+
+  if (!cookie.hostOnly && cookie.domain) {
+    details.domain = cookie.domain;
+  }
+
+  return chrome.cookies.set(details);
+}
+
 async function readCookie() {
   await resolveContext();
 
@@ -216,33 +327,30 @@ async function saveCookie() {
     throw new Error(`Cookie ${COOKIE_NAME} não foi encontrado para este domínio/path.`);
   }
 
-  const details = {
-    url: targetCookieUrl,
-    name: COOKIE_NAME,
-    value: newValue,
-    path: baseCookie.path,
-    secure: baseCookie.secure,
-    httpOnly: baseCookie.httpOnly,
-    sameSite: baseCookie.sameSite,
-    expirationDate: baseCookie.expirationDate
-  };
+  setStatus("Recarregando página (1/2)...", "ok");
+  await hardReloadActiveTab();
+  await delay(300);
 
-  if (baseCookie.domain) {
-    details.domain = baseCookie.domain;
+  const editableCookies = await getEditableCookies(baseCookie, targetCookieUrl);
+  const saveResults = [];
+  for (const cookie of editableCookies) {
+    const saved = await updateExistingCookieValue(cookie, newValue, targetCookieUrl);
+    if (saved) {
+      saveResults.push(saved);
+    }
   }
 
-  const savedCookie = await chrome.cookies.set(details);
-  if (!savedCookie) {
-    throw new Error("Não foi possível salvar o cookie no navegador.");
+  if (saveResults.length === 0) {
+    throw new Error("Não foi possível atualizar nenhum cookie existente.");
   }
 
   currentValueEl.value = newValue;
-  lastCookie = await getCookieByUrlHints(targetCookieUrl, COOKIE_NAME);
-  if (!lastCookie || lastCookie.value !== newValue) {
+  lastCookie = await waitForUpdatedCookie(newValue, saveResults[0]);
+  if (!lastCookie) {
     throw new Error("O cookie não foi atualizado com o novo valor.");
   }
 
-  setStatus("Cookie salvo com sucesso. Recarregando página...", "ok");
+  setStatus(`Cookie atualizado em ${saveResults.length} registro(s). Recarregando (2/2)...`, "ok");
   await requestBadgeSync();
   const reloaded = await hardReloadActiveTab();
   if (!reloaded) {
