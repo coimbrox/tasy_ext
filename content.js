@@ -1,4 +1,115 @@
 const BADGE_ID = "tasy-server-badge";
+const BADGE_MARGIN = 8;
+
+let currentDrag = null;
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getViewportLimits(badge) {
+  const rect = badge.getBoundingClientRect();
+  const maxX = Math.max(BADGE_MARGIN, window.innerWidth - rect.width - BADGE_MARGIN);
+  const maxY = Math.max(BADGE_MARGIN, window.innerHeight - rect.height - BADGE_MARGIN);
+  return { maxX, maxY };
+}
+
+function applyBadgeCoordinates(badge, coordinates) {
+  const xRaw = Number(coordinates?.x);
+  const yRaw = Number(coordinates?.y);
+  const xValid = Number.isFinite(xRaw);
+  const yValid = Number.isFinite(yRaw);
+  if (!xValid || !yValid) {
+    return;
+  }
+
+  const { maxX, maxY } = getViewportLimits(badge);
+  const x = clamp(Math.round(xRaw), BADGE_MARGIN, maxX);
+  const y = clamp(Math.round(yRaw), BADGE_MARGIN, maxY);
+
+  badge.style.top = `${y}px`;
+  badge.style.left = `${x}px`;
+  badge.style.right = "";
+  badge.style.bottom = "";
+}
+
+async function persistBadgeCoordinates(x, y) {
+  const payload = {
+    badgeCoordinates: {
+      x: Math.round(x),
+      y: Math.round(y)
+    }
+  };
+
+  await chrome.storage.local.set(payload);
+}
+
+function startDrag(event, badge) {
+  if (event.button !== 0) {
+    return;
+  }
+
+  const rect = badge.getBoundingClientRect();
+  currentDrag = {
+    pointerOffsetX: event.clientX - rect.left,
+    pointerOffsetY: event.clientY - rect.top
+  };
+
+  badge.style.cursor = "grabbing";
+  event.preventDefault();
+}
+
+async function updateDrag(event, badge) {
+  if (!currentDrag) {
+    return;
+  }
+
+  const { maxX, maxY } = getViewportLimits(badge);
+  const x = clamp(event.clientX - currentDrag.pointerOffsetX, BADGE_MARGIN, maxX);
+  const y = clamp(event.clientY - currentDrag.pointerOffsetY, BADGE_MARGIN, maxY);
+
+  badge.style.top = `${Math.round(y)}px`;
+  badge.style.left = `${Math.round(x)}px`;
+  badge.style.right = "";
+  badge.style.bottom = "";
+}
+
+async function finishDrag(badge) {
+  if (!currentDrag) {
+    return;
+  }
+
+  currentDrag = null;
+  badge.style.cursor = "grab";
+
+  const rect = badge.getBoundingClientRect();
+  await persistBadgeCoordinates(rect.left, rect.top);
+}
+
+function setupBadgeDrag(badge) {
+  if (badge.dataset.dragReady === "true") {
+    return;
+  }
+
+  badge.dataset.dragReady = "true";
+  badge.style.cursor = "grab";
+
+  badge.addEventListener("mousedown", (event) => {
+    startDrag(event, badge);
+  });
+
+  window.addEventListener("mousemove", (event) => {
+    void updateDrag(event, badge);
+  });
+
+  window.addEventListener("mouseup", () => {
+    void finishDrag(badge);
+  });
+
+  window.addEventListener("blur", () => {
+    void finishDrag(badge);
+  });
+}
 
 function applyBadgePosition(badge, position) {
   badge.style.top = "";
@@ -45,9 +156,10 @@ function ensureBadgeElement() {
   badge.style.padding = "6px 10px";
   badge.style.borderRadius = "8px";
   badge.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.25)";
-  badge.style.pointerEvents = "none";
+  badge.style.pointerEvents = "auto";
   badge.style.userSelect = "none";
   document.documentElement.appendChild(badge);
+  setupBadgeDrag(badge);
   return badge;
 }
 
@@ -67,7 +179,11 @@ function renderBadge(payload) {
 
   const serverId = payload?.serverId && payload.serverId !== "-" ? payload.serverId : "N/D";
   const badge = ensureBadgeElement();
-  applyBadgePosition(badge, payload?.badgePosition || "bottom-right");
+  if (payload?.badgeCoordinates && Number.isFinite(Number(payload.badgeCoordinates.x)) && Number.isFinite(Number(payload.badgeCoordinates.y))) {
+    applyBadgeCoordinates(badge, payload.badgeCoordinates);
+  } else {
+    applyBadgePosition(badge, payload?.badgePosition || "bottom-right");
+  }
   badge.textContent = `SRV ${serverId}`;
 }
 

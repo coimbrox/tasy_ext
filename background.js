@@ -35,6 +35,17 @@ async function getBadgePosition() {
   return valid.has(data.badgePosition) ? data.badgePosition : "bottom-right";
 }
 
+async function getBadgeCoordinates() {
+  const data = await chrome.storage.local.get(["badgeCoordinates"]);
+  const x = Number(data.badgeCoordinates?.x);
+  const y = Number(data.badgeCoordinates?.y);
+  if (Number.isFinite(x) && Number.isFinite(y)) {
+    return { x, y };
+  }
+
+  return null;
+}
+
 async function resolveCookieUrlForTab(tab) {
   const configuredDomain = await getConfiguredDomain();
 
@@ -75,25 +86,27 @@ async function getCookieByUrlHints(url, name) {
 
 async function getServerBadgePayloadForTab(tab) {
   const badgePosition = await getBadgePosition();
+  const badgeCoordinates = await getBadgeCoordinates();
   const enabled = await isServerFlagEnabled();
   if (!enabled) {
-    return { enabled: false, serverId: "-", badgePosition };
+    return { enabled: false, serverId: "-", badgePosition, badgeCoordinates };
   }
 
   const cookieUrl = await resolveCookieUrlForTab(tab);
   if (!cookieUrl) {
-    return { enabled: false, serverId: "-", badgePosition };
+    return { enabled: false, serverId: "-", badgePosition, badgeCoordinates };
   }
 
   const cookie = await getCookieByUrlHints(cookieUrl, COOKIE_NAME);
   if (!cookie) {
-    return { enabled: true, serverId: "-", badgePosition };
+    return { enabled: true, serverId: "-", badgePosition, badgeCoordinates };
   }
 
   return {
     enabled: true,
     serverId: extractServerId(cookie.value),
     badgePosition,
+    badgeCoordinates,
     cookieValue: cookie.value || ""
   };
 }
@@ -172,7 +185,7 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
     return;
   }
 
-  if (changes.showServerFlag || changes.configuredDomain || changes.badgePosition) {
+  if (changes.showServerFlag || changes.configuredDomain || changes.badgePosition || changes.badgeCoordinates) {
     await syncBadgeToAllHttpTabs();
   }
 });

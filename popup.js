@@ -370,7 +370,7 @@ showServerFlagEl.addEventListener("change", async () => {
 badgePositionEl.addEventListener("change", async () => {
   const normalized = normalizeBadgePosition(badgePositionEl.value);
   badgePositionEl.value = normalized;
-  await chrome.storage.local.set({ badgePosition: normalized });
+  await chrome.storage.local.set({ badgePosition: normalized, badgeCoordinates: null });
   await requestBadgeSync();
 });
 

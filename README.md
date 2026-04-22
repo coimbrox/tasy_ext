@@ -8,6 +8,7 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 - Presets prontos: `tasy.circulosaude.com.br` e `tasyhml.circulosaude.com.br`.
 - Flag opcional para mostrar, no canto da tela do TASY, um badge com o servidor detectado (ex.: `_512` => `512`).
 - Permite escolher o canto do badge: superior direito/esquerdo ou inferior direito/esquerdo.
+- Permite arrastar o badge com o mouse para qualquer ponto da tela (posição persistida).
 - Lê o valor atual de `TASYAPPSERVER_TASY`.
 - Permite informar um novo valor e salvar no mesmo cookie.
 - Ao salvar o cookie, executa recarga forçada antes e depois da troca (equivalente a `Ctrl+Shift+R` duas vezes).
@@ -36,10 +37,11 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 3. Clique em **Salvar domínio**.
 4. (Opcional) Marque **Mostrar servidor no canto da tela**.
 5. Em **Posição do badge**, escolha o canto desejado.
-6. Clique em **Ler cookie** (ou aguarde leitura automática).
-7. Edite o campo **Novo valor**.
-8. Clique em **Salvar**.
-9. A extensão faz recarga forçada, atualiza o cookie existente e faz nova recarga forçada.
+6. Se preferir, arraste o badge na página para posição livre.
+7. Clique em **Ler cookie** (ou aguarde leitura automática).
+8. Edite o campo **Novo valor**.
+9. Clique em **Salvar**.
+10. A extensão faz recarga forçada, atualiza o cookie existente e faz nova recarga forçada.
 
 ## Arquivos
 
@@ -56,4 +58,5 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 - Se o cookie não existir para a URL/path atual, a extensão informa no status.
 - Com a flag ativa, o badge aparece no canto inferior direito da tela da página.
 - A posição do badge segue a opção selecionada no popup.
+- Ao arrastar o badge, a posição livre passa a valer; ao trocar o canto no popup, volta ao modo por canto.
 - Após salvar, recarregue a página do TASY para aplicar o novo valor de sessão, se necessário.
