@@ -14,6 +14,8 @@ const currentValueEl = document.getElementById("currentValue");
 const newValueEl = document.getElementById("newValue");
 const refreshBtn = document.getElementById("refreshBtn");
 const saveBtn = document.getElementById("saveBtn");
+const copyTraceBtn = document.getElementById("copyTraceBtn");
+const clearTraceBtn = document.getElementById("clearTraceBtn");
 const statusEl = document.getElementById("status");
 
 let activeTab = null;
@@ -119,6 +121,25 @@ async function hardReloadActiveTab() {
 
   await chrome.tabs.reload(tab.id, { bypassCache: true });
   return true;
+}
+
+async function getPerformanceTraceLog(limit = 120) {
+  const response = await chrome.runtime.sendMessage({
+    type: "TASY_PERF_TRACE_GET",
+    limit
+  });
+
+  if (!response || response.ok !== true || !Array.isArray(response.log)) {
+    return [];
+  }
+
+  return response.log;
+}
+
+async function clearPerformanceTraceLog() {
+  await chrome.runtime.sendMessage({
+    type: "TASY_PERF_TRACE_CLEAR"
+  });
 }
 
 function getConfiguredDomainFromUi() {
@@ -401,6 +422,33 @@ saveBtn.addEventListener("click", async () => {
     await saveCookie();
   } catch (error) {
     setStatus(error.message || String(error), "error");
+  }
+});
+
+copyTraceBtn.addEventListener("click", async () => {
+  setStatus("Coletando trace...");
+  try {
+    const log = await getPerformanceTraceLog(180);
+    if (log.length === 0) {
+      setStatus("Ainda não há eventos de trace para copiar.", "warn");
+      return;
+    }
+
+    const content = JSON.stringify(log, null, 2);
+    await navigator.clipboard.writeText(content);
+    setStatus(`Trace copiado (${log.length} evento(s)).`, "ok");
+  } catch (error) {
+    setStatus(`Falha ao copiar trace: ${error.message || String(error)}`, "error");
+  }
+});
+
+clearTraceBtn.addEventListener("click", async () => {
+  setStatus("Limpando trace...");
+  try {
+    await clearPerformanceTraceLog();
+    setStatus("Trace limpo com sucesso.", "ok");
+  } catch (error) {
+    setStatus(`Falha ao limpar trace: ${error.message || String(error)}`, "error");
   }
 });
 

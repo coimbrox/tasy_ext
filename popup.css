@@ -84,6 +84,10 @@ textarea {
   margin-top: 6px;
 }
 
+.actions.actions-trace button {
+  flex: 1;
+}
+
 button {
   border: 1px solid #999;
   border-radius: 6px;

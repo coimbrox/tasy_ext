@@ -9,6 +9,8 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 - Flag opcional para mostrar, no canto da tela do TASY, um badge com o servidor detectado (ex.: `_512` => `512`).
 - Permite escolher o canto do badge: superior direito/esquerdo ou inferior direito/esquerdo.
 - Permite arrastar o badge com o mouse para qualquer ponto da tela (posição persistida).
+- Badge muda de cor automaticamente quando detecta oscilação/lentidão de resposta.
+- Tracer de performance com log de latência, jitter, status e motivo da lentidão/oscilação.
 - Lê o valor atual de `TASYAPPSERVER_TASY`.
 - Permite informar um novo valor e salvar no mesmo cookie.
 - Ao salvar o cookie, executa recarga forçada antes e depois da troca (equivalente a `Ctrl+Shift+R` duas vezes).
@@ -42,6 +44,7 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 8. Edite o campo **Novo valor**.
 9. Clique em **Salvar**.
 10. A extensão faz recarga forçada, atualiza o cookie existente e faz nova recarga forçada.
+11. Em **Tracer de performance**, use **Copiar log** para levar o histórico de diagnóstico e **Limpar log** para zerar a coleta.
 
 ## Arquivos
 
@@ -59,4 +62,6 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 - Com a flag ativa, o badge aparece no canto inferior direito da tela da página.
 - A posição do badge segue a opção selecionada no popup.
 - Ao arrastar o badge, a posição livre passa a valer; ao trocar o canto no popup, volta ao modo por canto.
+- Cores da badge: azul (normal), laranja (oscilação), vermelho (lento).
+- O tracer registra `status` e `reason` (ex.: `high_average_latency`, `extreme_jitter`, `probe_timeout_or_network_error`).
 - Após salvar, recarregue a página do TASY para aplicar o novo valor de sessão, se necessário.
