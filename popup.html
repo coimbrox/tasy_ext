@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TASY Cookie Switcher</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="container">
+      <div class="header">
+        <img src="icon.png" alt="Logo" class="logo" />
+        <h1>TASY Cookie Switcher</h1>
+      </div>
+
+      <div class="field">
+        <label for="domainPreset">Domínio configurado</label>
+        <select id="domainPreset">
+          <option value="auto">Usar aba ativa</option>
+          <option value="tasy.circulosaude.com.br">tasy.circulosaude.com.br</option>
+          <option value="tasyhml.circulosaude.com.br">tasyhml.circulosaude.com.br</option>
+          <option value="custom">Outro domínio...</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="customDomain">Domínio personalizado</label>
+        <input id="customDomain" type="text" placeholder="ex: tasydev.circulosaude.com.br" disabled />
+      </div>
+
+      <div class="actions">
+        <button id="saveDomainBtn" type="button">Salvar domínio</button>
+      </div>
+
+      <div class="field inline-field">
+        <label for="showServerFlag" class="checkbox-label">
+          <input id="showServerFlag" type="checkbox" />
+          Mostrar servidor no canto da tela
+        </label>
+      </div>
+
+      <div class="field">
+        <label for="badgePosition">Posição do badge</label>
+        <select id="badgePosition">
+          <option value="top-right">Superior direito</option>
+          <option value="top-left">Superior esquerdo</option>
+          <option value="bottom-right">Inferior direito</option>
+          <option value="bottom-left">Inferior esquerdo</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Domínio atual</label>
+        <div id="domain" class="value">-</div>
+      </div>
+
+      <div class="field">
+        <label>Valor atual (`TASYAPPSERVER_TASY`)</label>
+        <textarea id="currentValue" rows="3" readonly placeholder="Não lido ainda"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="newValue">Novo valor</label>
+        <textarea id="newValue" rows="3" placeholder="Digite o novo valor"></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="refreshBtn" type="button">Ler cookie</button>
+        <button id="saveBtn" type="button" class="primary">Salvar</button>
+      </div>
+
+      <p id="status" class="status"></p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
