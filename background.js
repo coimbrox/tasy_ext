@@ -107,6 +107,13 @@ async function getBadgeCoordinates() {
 async function resolveCookieUrlForTab(tab) {
   const configuredDomain = await getConfiguredDomain();
 
+  if (tab && isHttpOrHttps(tab.url)) {
+    const parsedActive = new URL(tab.url);
+    if (isTasyHostname(parsedActive.hostname)) {
+      return tab.url;
+    }
+  }
+
   if (configuredDomain) {
     let preferredScheme = "https:";
     if (tab && isHttpOrHttps(tab.url)) {

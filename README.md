@@ -6,6 +6,7 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 
 - Permite configurar domínio fixo (ou usar a aba ativa).
 - Presets prontos: `tasy.circulosaude.com.br` e `tasyhml.circulosaude.com.br`.
+- Quando a aba ativa já for TASY/HML, a extensão prioriza essa aba para leitura/gravação do cookie.
 - Flag opcional para mostrar, no canto da tela do TASY, um badge com o servidor detectado (ex.: `_512` => `512`).
 - A badge só aparece em abas TASY (hostname contendo `tasy`).
 - Permite escolher o canto do badge: superior direito/esquerdo ou inferior direito/esquerdo.
@@ -45,7 +46,7 @@ Extensão Chrome (Manifest V3) para ler e alterar o cookie `TASYAPPSERVER_TASY`.
 8. Edite o campo **Novo valor**.
 9. Clique em **Salvar**.
 10. A extensão faz recarga forçada, atualiza o cookie existente e faz nova recarga forçada.
-11. Em **Tracer de performance**, use **Copiar log** para levar o histórico de diagnóstico e **Limpar log** para zerar a coleta.
+11. Em **Tracer de performance**, use **Copiar log** para levar apenas o histórico da aba ativa e **Limpar log** para zerar a coleta.
 
 ## Arquivos
 

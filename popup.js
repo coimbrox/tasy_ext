@@ -31,6 +31,10 @@ function isHttpOrHttps(url) {
   return url && (url.startsWith("http://") || url.startsWith("https://"));
 }
 
+function isTasyHostname(hostname) {
+  return typeof hostname === "string" && hostname.toLowerCase().includes("tasy");
+}
+
 function isValidHostname(hostname) {
   return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i.test(hostname);
 }
@@ -217,13 +221,21 @@ async function resolveContext() {
   activeTab = await getActiveTab();
   const configuredDomain = await getConfiguredDomain();
 
+  const activeTabInfo =
+    activeTab && isHttpOrHttps(activeTab.url)
+      ? new URL(activeTab.url)
+      : null;
+
   if (configuredDomain) {
+    if (activeTabInfo && isTasyHostname(activeTabInfo.hostname)) {
+      targetCookieUrl = activeTab.url;
+      domainEl.textContent = `${activeTabInfo.hostname} (aba ativa)`;
+      return;
+    }
+
     let preferredScheme = "https:";
-    if (activeTab && isHttpOrHttps(activeTab.url)) {
-      const activeUrl = new URL(activeTab.url);
-      if (activeUrl.hostname.toLowerCase() === configuredDomain) {
-        preferredScheme = activeUrl.protocol;
-      }
+    if (activeTabInfo && activeTabInfo.hostname.toLowerCase() === configuredDomain) {
+      preferredScheme = activeTabInfo.protocol;
     }
 
     targetCookieUrl = `${preferredScheme}//${configuredDomain}/`;
@@ -428,15 +440,23 @@ saveBtn.addEventListener("click", async () => {
 copyTraceBtn.addEventListener("click", async () => {
   setStatus("Coletando trace...");
   try {
-    const log = await getPerformanceTraceLog(180);
-    if (log.length === 0) {
-      setStatus("Ainda não há eventos de trace para copiar.", "warn");
+    const activeTab = await getActiveTab();
+    if (!activeTab || typeof activeTab.id !== "number") {
+      setStatus("Não foi possível identificar a aba ativa para copiar o trace.", "warn");
       return;
     }
 
-    const content = JSON.stringify(log, null, 2);
+    const log = await getPerformanceTraceLog(300);
+    const activeTabLog = log.filter((entry) => Number(entry?.tabId) === Number(activeTab.id));
+
+    if (activeTabLog.length === 0) {
+      setStatus("Ainda não há eventos de trace para a aba ativa.", "warn");
+      return;
+    }
+
+    const content = JSON.stringify(activeTabLog, null, 2);
     await navigator.clipboard.writeText(content);
-    setStatus(`Trace copiado (${log.length} evento(s)).`, "ok");
+    setStatus(`Trace da aba ativa copiado (${activeTabLog.length} evento(s)).`, "ok");
   } catch (error) {
     setStatus(`Falha ao copiar trace: ${error.message || String(error)}`, "error");
   }
