@@ -110,7 +110,7 @@ function formatTraceEntry(entry) {
 }
 
 function setTraceButtonState(active) {
-  toggleTraceBtn.textContent = active ? "Desativar trace" : "Ativar trace";
+  toggleTraceBtn.textContent = active ? "Parar registro" : "Iniciar registro";
   toggleTraceBtn.classList.toggle("recording", active);
 }
 
@@ -126,18 +126,18 @@ toggleTraceBtn.addEventListener("click", async () => {
   if (!isActive) {
     await chrome.storage.local.set({ [TRACE_ACTIVE_KEY]: true, performanceTraceLog: [] });
     setTraceButtonState(true);
-    setStatus("Trace ativado. Execute o processo no TASY normalmente.", "ok");
+    setStatus("Registro iniciado. Execute o processo no TASY normalmente.", "ok");
     return;
   }
 
   await chrome.storage.local.set({ [TRACE_ACTIVE_KEY]: false });
   setTraceButtonState(false);
-  setStatus("Coletando trace...");
+  setStatus("Finalizando registro...");
 
   try {
     const activeTab = await getActiveTab();
     if (!activeTab || typeof activeTab.id !== "number") {
-      setStatus("Não foi possível identificar a aba ativa para copiar o trace.", "warn");
+      setStatus("Não foi possível identificar a aba ativa para copiar o registro.", "warn");
       return;
     }
 
@@ -145,20 +145,20 @@ toggleTraceBtn.addEventListener("click", async () => {
     const activeTabLog = log.filter((entry) => Number(entry?.tabId) === Number(activeTab.id));
 
     if (activeTabLog.length === 0) {
-      setStatus("Trace desativado. Nenhum evento foi registrado.", "warn");
+      setStatus("Registro finalizado. Nenhum evento foi registrado.", "warn");
       return;
     }
 
     const lines = activeTabLog.map(formatTraceEntry).filter(Boolean);
     if (lines.length === 0) {
-      setStatus("Trace desativado. Nenhum evento relevante foi registrado.", "warn");
+      setStatus("Registro finalizado. Nenhum evento relevante foi registrado.", "warn");
       return;
     }
 
     await navigator.clipboard.writeText(lines.join("\n"));
-    setStatus(`Trace copiado (${lines.length} evento(s)).`, "ok");
+    setStatus(`Registro copiado (${lines.length} evento(s)).`, "ok");
   } catch (error) {
-    setStatus(`Falha ao copiar trace: ${error.message || String(error)}`, "error");
+    setStatus(`Falha ao copiar registro: ${error.message || String(error)}`, "error");
   }
 });
 
