@@ -3,10 +3,12 @@ const TRACE_MAX_ENTRIES = 500;
 
 function normalizeTraceEvent(event, senderTab) {
   const safeEvent = typeof event === "object" && event ? event : {};
-  const kind = ["request", "navigation"].includes(safeEvent.kind) ? safeEvent.kind : "probe";
+  const kind = ["request", "navigation", "interaction"].includes(safeEvent.kind) ? safeEvent.kind : "probe";
   return {
     kind,
     label: typeof safeEvent.label === "string" ? safeEvent.label : null,
+    action: typeof safeEvent.action === "string" ? safeEvent.action : null,
+    value: typeof safeEvent.value === "string" ? safeEvent.value : null,
     timestamp: typeof safeEvent.timestamp === "string" ? safeEvent.timestamp : new Date().toISOString(),
     status: typeof safeEvent.status === "string" ? safeEvent.status : "unknown",
     reason: typeof safeEvent.reason === "string" ? safeEvent.reason : "unspecified",

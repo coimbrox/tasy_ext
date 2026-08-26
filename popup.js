@@ -97,6 +97,16 @@ function formatTraceEntry(entry) {
     return `[${time}] → ${entry.method || "GET"} ${entry.url || ""} (${status}, ${entry.durationMs ?? "?"}ms)`;
   }
 
+  if (entry.kind === "interaction") {
+    if (entry.action === "click") {
+      return `[${time}] 🖱️ Clicou em: ${entry.label}`;
+    }
+    if (entry.action === "input") {
+      return `[${time}] ⌨️ Preencheu "${entry.label}": ${entry.value}`;
+    }
+    return null;
+  }
+
   if (entry.kind === "probe" && entry.status && entry.status !== "normal") {
     return `[${time}] ⚠️ ${entry.status} — ${entry.reason} (latência: ${entry.latencyMs ?? "?"}ms)`;
   }

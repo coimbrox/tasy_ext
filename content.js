@@ -228,6 +228,95 @@ async function syncTraceActiveState() {
 
 void syncTraceActiveState();
 
+// --- Interaction trace: clicks and field values, while a trace is active ---
+
+function describeField(el) {
+  const container = el.closest(".w-attr-container[w-attr-name]");
+  if (container) {
+    const attrName = container.getAttribute("w-attr-name");
+    const label = container.querySelector("label")?.innerText?.trim();
+    return label ? `${label} (${attrName})` : attrName;
+  }
+
+  const label = el.closest("label")?.innerText?.trim();
+  if (label) {
+    return label;
+  }
+
+  return el.getAttribute("aria-label") || el.getAttribute("placeholder") || el.name || el.id || el.tagName.toLowerCase();
+}
+
+function describeClickTarget(el) {
+  const clickable = el.closest("button, a, [role='button']");
+  if (!clickable) {
+    return null;
+  }
+
+  const text = clickable.innerText?.trim().split("\n")[0];
+  return text || clickable.getAttribute("aria-label") || clickable.title || null;
+}
+
+document.addEventListener(
+  "click",
+  (event) => {
+    if (!traceActive || !(event.target instanceof Element)) {
+      return;
+    }
+
+    if (event.target.closest("input, select, textarea")) {
+      return;
+    }
+
+    const label = describeClickTarget(event.target);
+    if (!label) {
+      return;
+    }
+
+    void emitPerformanceTrace({
+      kind: "interaction",
+      timestamp: new Date().toISOString(),
+      pageUrl: window.location.href,
+      origin: window.location.origin,
+      action: "click",
+      label
+    });
+  },
+  true
+);
+
+document.addEventListener(
+  "change",
+  (event) => {
+    const target = event.target;
+    const isFormField =
+      target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement;
+    if (!traceActive || !isFormField || target.type === "password") {
+      return;
+    }
+
+    const label = describeField(target);
+    let value;
+    if (target instanceof HTMLSelectElement) {
+      value = target.options[target.selectedIndex]?.text || target.value;
+    } else if (target.type === "checkbox" || target.type === "radio") {
+      value = target.checked ? "marcado" : "desmarcado";
+    } else {
+      value = target.value;
+    }
+
+    void emitPerformanceTrace({
+      kind: "interaction",
+      timestamp: new Date().toISOString(),
+      pageUrl: window.location.href,
+      origin: window.location.origin,
+      action: "input",
+      label,
+      value: String(value ?? "").slice(0, 200)
+    });
+  },
+  true
+);
+
 // --- Tasy metadata bridge ---------------------------------------------------
 // Relays chrome.storage options/recent-features to the page-context script
 // (metadata-injected.js, world: "MAIN") since only this isolated script has
