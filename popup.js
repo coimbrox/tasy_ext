@@ -92,11 +92,6 @@ function formatTraceEntry(entry) {
     return entry.label ? `[${time}] 🖥️ Tela aberta: ${entry.label}` : null;
   }
 
-  if (entry.kind === "request") {
-    const status = entry.httpStatus ?? "erro";
-    return `[${time}] → ${entry.method || "GET"} ${entry.url || ""} (${status}, ${entry.durationMs ?? "?"}ms)`;
-  }
-
   if (entry.kind === "interaction") {
     if (entry.action === "click") {
       return `[${time}] 🖱️ Clicou em: ${entry.label}`;
@@ -112,14 +107,6 @@ function formatTraceEntry(entry) {
   }
 
   return null;
-}
-
-function buildReadableTrace(entries) {
-  const lines = entries.map(formatTraceEntry).filter(Boolean);
-  if (lines.length === 0) {
-    return "";
-  }
-  return lines.join("\n");
 }
 
 function setTraceButtonState(active) {
@@ -162,14 +149,14 @@ toggleTraceBtn.addEventListener("click", async () => {
       return;
     }
 
-    const readable = buildReadableTrace(activeTabLog);
-    if (!readable) {
+    const lines = activeTabLog.map(formatTraceEntry).filter(Boolean);
+    if (lines.length === 0) {
       setStatus("Trace desativado. Nenhum evento relevante foi registrado.", "warn");
       return;
     }
 
-    await navigator.clipboard.writeText(readable);
-    setStatus(`Trace copiado (${activeTabLog.length} evento(s)).`, "ok");
+    await navigator.clipboard.writeText(lines.join("\n"));
+    setStatus(`Trace copiado (${lines.length} evento(s)).`, "ok");
   } catch (error) {
     setStatus(`Falha ao copiar trace: ${error.message || String(error)}`, "error");
   }

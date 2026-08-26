@@ -10,13 +10,12 @@ Funciona em qualquer ambiente TASY cujo domínio contenha "tasy" no hostname (ex
 
 No popup, em **Trace de processo**, um único botão liga e desliga a gravação:
 
-- **Ativar trace**: zera o log e começa a registrar, em ordem cronológica: cada tela aberta no TASY, cliques em botões/links, valores preenchidos em campos (exceto campos de senha) e cada requisição real (fetch/XHR) feita — método, caminho, status HTTP e duração. Também faz uma sondagem de latência periódica (~8s) para detectar oscilação/lentidão de rede durante a gravação.
+- **Ativar trace**: zera o log e começa a registrar, em ordem cronológica: cada tela aberta no TASY, cliques em botões/links e valores preenchidos em campos (exceto campos de senha). Internamente também mede cada requisição real (fetch/XHR) e a latência de rede, usados só para detectar oscilação/lentidão — essas linhas não entram no texto copiado, que fica focado no passo a passo.
 - Execute normalmente o processo que quer documentar (ex.: criar um usuário).
 - **Desativar trace**: para a gravação e copia automaticamente para a área de transferência um resumo legível de tudo que aconteceu na aba ativa, por exemplo:
   ```
   [14:32:10] 🖥️ Tela aberta: Cadastro de Usuários
   [14:32:12] ⌨️ Preencheu "Código (CD_USUARIO)": 12345
-  [14:32:15] → POST /TasyAppServer/resources/service/WUser/save (200, 340ms)
   [14:32:15] 🖱️ Clicou em: Salvar
   [14:32:16] ⚠️ oscillating — extreme_jitter (latência: 1850ms)
   ```
