@@ -162,6 +162,125 @@
   left: 5px;
 }
 
+/* --- Report layout preview -------------------------------------------------- */
+
+.tex-layout-button {
+  cursor: pointer;
+  z-index: 2147482998;
+  position: fixed;
+  top: 4px;
+  left: 12px;
+  padding: 6px 10px;
+  background-color: #075985;
+  border: 1px solid #F1F5F9;
+  border-radius: 6px;
+  color: #F1F5F9;
+  font-size: 12px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-weight: 600;
+}
+
+.tex-layout-button:hover {
+  background-color: #0284C7;
+}
+
+.tex-layout-container {
+  width: 80vw;
+  max-width: 80vw;
+  height: 80vh;
+  max-height: 80vh;
+}
+
+.tex-layout-add-button {
+  margin-right: 10px;
+  padding: 6px 10px;
+  border: 1px solid rgba(241, 245, 249, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: #F1F5F9;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tex-layout-add-button:hover {
+  border-color: #38BDF8;
+  color: #38BDF8;
+}
+
+.tex-layout-content {
+  background: #1e293b;
+}
+
+.tex-layout-canvas {
+  position: relative;
+  background-image: linear-gradient(rgba(241, 245, 249, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(241, 245, 249, 0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-color: #0F172A;
+  border: 1px dashed rgba(241, 245, 249, 0.2);
+}
+
+.tex-layout-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid #38BDF8;
+  background-color: rgba(56, 189, 248, 0.12);
+  overflow: hidden;
+  padding: 2px 4px;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.tex-layout-box-new {
+  cursor: move;
+  border-color: #0284C7;
+  background-color: rgba(2, 132, 199, 0.25);
+  z-index: 5;
+}
+
+.tex-layout-box-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #F1F5F9;
+  white-space: nowrap;
+}
+
+.tex-layout-box-info {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  white-space: nowrap;
+  font-size: 10px;
+  font-family: "Consolas", "Courier New", monospace;
+  color: #38BDF8;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 1px 4px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.tex-layout-copy-button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 1px 5px;
+  font-size: 9px;
+  border: 1px solid rgba(241, 245, 249, 0.4);
+  border-radius: 3px;
+  background: rgba(15, 23, 42, 0.6);
+  color: #F1F5F9;
+  cursor: pointer;
+}
+
+.tex-layout-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nwse-resize;
+  background: #0284C7;
+}
+
 /* --- Inspect mode ----------------------------------------------------------- */
 
 .tex-inspect-button {

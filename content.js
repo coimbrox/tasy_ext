@@ -120,6 +120,7 @@ async function tracePerformanceCycle(latencyMs, status) {
   const metrics = summarizePerformanceMetrics();
   const reason = inferPerformanceReason(status, latencyMs, metrics);
   const event = {
+    kind: "probe",
     timestamp: new Date().toISOString(),
     pageUrl: window.location.href,
     origin: window.location.origin,
@@ -204,7 +205,8 @@ const METADATA_OPTION_KEYS = [
   "showPanelDetails",
   "showRecentFeatures",
   "showUserLocale",
-  "inspectMode"
+  "inspectMode",
+  "showReportLayout"
 ];
 const RECENT_FEATURES_KEY = "recentFeatures";
 const RECENT_FEATURES_MAX = 20;
@@ -269,6 +271,17 @@ window.addEventListener("message", (event) => {
 
   if (data.type === "FEATURE_REMOVED") {
     void removeRecentFeature(data.feature);
+    return;
+  }
+
+  if (data.type === "API_CALL") {
+    void emitPerformanceTrace({
+      kind: "request",
+      timestamp: new Date().toISOString(),
+      pageUrl: window.location.href,
+      origin: window.location.origin,
+      ...data.entry
+    });
   }
 });
 

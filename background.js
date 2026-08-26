@@ -1,9 +1,11 @@
 const TRACE_STORAGE_KEY = "performanceTraceLog";
-const TRACE_MAX_ENTRIES = 300;
+const TRACE_MAX_ENTRIES = 500;
 
 function normalizeTraceEvent(event, senderTab) {
   const safeEvent = typeof event === "object" && event ? event : {};
+  const kind = safeEvent.kind === "request" ? "request" : "probe";
   return {
+    kind,
     timestamp: typeof safeEvent.timestamp === "string" ? safeEvent.timestamp : new Date().toISOString(),
     status: typeof safeEvent.status === "string" ? safeEvent.status : "unknown",
     reason: typeof safeEvent.reason === "string" ? safeEvent.reason : "unspecified",
@@ -14,6 +16,11 @@ function normalizeTraceEvent(event, senderTab) {
     jitterMs: Number.isFinite(Number(safeEvent.jitterMs)) ? Number(safeEvent.jitterMs) : null,
     sampleCount: Number.isFinite(Number(safeEvent.sampleCount)) ? Number(safeEvent.sampleCount) : 0,
     failures: Number.isFinite(Number(safeEvent.failures)) ? Number(safeEvent.failures) : 0,
+    method: typeof safeEvent.method === "string" ? safeEvent.method : null,
+    url: typeof safeEvent.url === "string" ? safeEvent.url : null,
+    httpStatus: Number.isFinite(Number(safeEvent.httpStatus)) ? Number(safeEvent.httpStatus) : null,
+    ok: typeof safeEvent.ok === "boolean" ? safeEvent.ok : null,
+    durationMs: Number.isFinite(Number(safeEvent.durationMs)) ? Number(safeEvent.durationMs) : null,
     pageUrl: typeof safeEvent.pageUrl === "string" ? safeEvent.pageUrl : senderTab?.url || "",
     origin: typeof safeEvent.origin === "string" ? safeEvent.origin : "",
     tabId: typeof senderTab?.id === "number" ? senderTab.id : null

@@ -6,10 +6,10 @@ Funciona em qualquer ambiente TASY cujo domínio contenha "tasy" no hostname (ex
 
 ## O que faz
 
-### Monitoramento de desempenho
+### Monitoramento de desempenho e trace de processo
 
-- Faz uma sondagem de latência periódica (a cada ~8s) contra a própria origem da aba TASY.
-- Classifica o estado como normal, oscilando ou lento, com base em média, pico e jitter das últimas amostras.
+- Faz uma sondagem de latência periódica (a cada ~8s) contra a própria origem da aba TASY e classifica o estado como normal, oscilando ou lento, com base em média, pico e jitter das últimas amostras.
+- Registra também cada requisição real (fetch/XHR) que a página TASY faz — método, caminho, status HTTP e duração — permitindo montar o trace completo de um processo: clique em **Limpar log**, execute a ação no TASY (ex.: criar um usuário) e depois **Copiar log** para obter todas as chamadas de backend feitas durante aquele processo, na ordem em que ocorreram.
 - Mantém um log local (`Tracer de performance`) com status, motivo (ex.: `high_average_latency`, `extreme_jitter`, `probe_timeout_or_network_error`) e métricas de cada evento relevante.
 - No popup, use **Copiar log** para levar o histórico da aba ativa e **Limpar log** para zerar a coleta.
 
@@ -23,6 +23,7 @@ Cada opção liga/desliga independentemente pelo popup, em **Metadados TASY**:
 - **Recentes (tela inicial)**: painel lateral na tela inicial do TASY com as últimas telas abertas, para acesso rápido (clique para abrir, "×" para remover).
 - **Idioma do usuário no rodapé**: mostra o idioma da sessão atual ao lado da data no rodapé.
 - **Modo inspeção**: exibe um botão "Inspecionar" fixo na tela; ao clicar em qualquer elemento, abre uma janela com o escopo AngularJS daquele elemento (dados técnicos brutos).
+- **Layout visual (relatórios)** *(experimental)*: quando a grade atual tem as colunas Esquerda/Topo/Tamanho/Altura (editor de bandas/campos de relatório do TASY), mostra um botão "📐 Layout visual" que abre um canvas com os campos já cadastrados nas posições reais. Arraste um novo campo (`+ Novo campo`) até a posição desejada e clique em **Copiar** para levar Esquerda/Topo/Tamanho/Altura prontos para colar na grade. É somente leitura: a extensão nunca escreve na grade do TASY, e só lê as linhas atualmente renderizadas na tela (role a grade se o campo de referência não estiver visível).
 
 Clicar em qualquer badge/label copia o valor para a área de transferência. Os botões **Limpar recentes** e **Recarregar estilos** ficam junto das opções de metadados.
 

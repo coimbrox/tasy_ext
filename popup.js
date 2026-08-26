@@ -4,7 +4,8 @@ const METADATA_OPTION_KEYS = [
   "showPanelDetails",
   "showRecentFeatures",
   "showUserLocale",
-  "inspectMode"
+  "inspectMode",
+  "showReportLayout"
 ];
 const metadataCheckboxes = Object.fromEntries(
   METADATA_OPTION_KEYS.map((key) => [key, document.getElementById(key)])

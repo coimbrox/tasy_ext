@@ -15,6 +15,7 @@ Tasy DevTools é uma extensão para Google Chrome voltada a desenvolvedores e ti
 | Dado | Por quê | Onde fica |
 |---|---|---|
 | URL e tempo de resposta de uma sondagem HTTP (`/favicon.ico?__tasy_probe=...`) contra a própria aba TASY | Medir latência/oscilação de rede para o log de performance | `chrome.storage.local` (campo `performanceTraceLog`), local ao navegador |
+| Método, caminho da URL, status HTTP e duração de cada requisição real feita pela página TASY (fetch/XHR) | Montar o "trace" do processo que o usuário executou (ex.: todas as chamadas feitas ao criar um usuário), para diagnóstico de lentidão | `chrome.storage.local` (campo `performanceTraceLog`), local ao navegador; não inclui corpo da requisição/resposta |
 | Nomes técnicos de campos, colunas de grid, código/tabela de painéis e itens de menu recentes, lidos do DOM/AngularJS da página TASY | Exibir os overlays de metadados e a lista de "Recentes" | `chrome.storage.local` (`recentFeatures`) e repassados via mensagens internas da extensão; nunca saem do navegador |
 | Configurações da extensão (quais overlays estão ativos) | Lembrar as preferências do usuário entre sessões | `chrome.storage.local` |
 

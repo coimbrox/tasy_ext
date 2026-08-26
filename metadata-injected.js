@@ -22,6 +22,88 @@
     window.postMessage({ [MSG_MARK]: true, type, ...payload }, "*");
   }
 
+  // --- Process trace: records every real API call TASY makes ----------------
+  // (method, endpoint, status, duration), so clearing the log before doing
+  // something in TASY and copying it after shows the actual backend trace of
+  // that process - not just a synthetic latency probe.
+  function isTasyHost() {
+    return window.location.hostname.toLowerCase().includes("tasy");
+  }
+
+  function relativeUrl(rawUrl) {
+    try {
+      const parsed = new URL(rawUrl, window.location.href);
+      return parsed.pathname + parsed.search;
+    } catch (_error) {
+      return typeof rawUrl === "string" ? rawUrl : null;
+    }
+  }
+
+  function reportApiCall(entry) {
+    if (!entry.url || entry.url.includes("__tasy_probe")) {
+      return;
+    }
+    sendToBridge("API_CALL", { entry });
+  }
+
+  if (isTasyHost()) {
+    const originalFetch = window.fetch;
+    if (typeof originalFetch === "function") {
+      window.fetch = function patchedFetch(input, init) {
+        const startedAt = performance.now();
+        const rawUrl = typeof input === "string" ? input : input?.url;
+        const method = (init && init.method) || (typeof input === "object" && input?.method) || "GET";
+        const url = relativeUrl(rawUrl);
+        return originalFetch.apply(this, arguments).then(
+          (response) => {
+            reportApiCall({
+              method: String(method).toUpperCase(),
+              url,
+              httpStatus: response.status,
+              ok: response.ok,
+              durationMs: Math.round(performance.now() - startedAt)
+            });
+            return response;
+          },
+          (error) => {
+            reportApiCall({
+              method: String(method).toUpperCase(),
+              url,
+              httpStatus: null,
+              ok: false,
+              durationMs: Math.round(performance.now() - startedAt)
+            });
+            throw error;
+          }
+        );
+      };
+    }
+
+    const XHRProto = window.XMLHttpRequest && window.XMLHttpRequest.prototype;
+    if (XHRProto) {
+      const originalOpen = XHRProto.open;
+      const originalSend = XHRProto.send;
+      XHRProto.open = function patchedOpen(method, url, ...rest) {
+        this.__tasyExtMethod = method;
+        this.__tasyExtUrl = url;
+        return originalOpen.call(this, method, url, ...rest);
+      };
+      XHRProto.send = function patchedSend(...args) {
+        const startedAt = performance.now();
+        this.addEventListener("loadend", () => {
+          reportApiCall({
+            method: String(this.__tasyExtMethod || "GET").toUpperCase(),
+            url: relativeUrl(this.__tasyExtUrl),
+            httpStatus: this.status || null,
+            ok: this.status >= 200 && this.status < 400,
+            durationMs: Math.round(performance.now() - startedAt)
+          });
+        });
+        return originalSend.apply(this, args);
+      };
+    }
+  }
+
   // Runs on the leading edge (so badges show up immediately on the first
   // relevant mutation) and once more on the trailing edge if more mutations
   // arrived meanwhile (so the render catches up with the final DOM state).
@@ -653,12 +735,310 @@
     }
   }
 
+  // --- Report layout preview: visual canvas for grids with Esquerda/Topo/
+  // Tamanho/Altura columns (TASY's report band/field editor). Read-only: it
+  // never writes back into the TASY grid, only reads the rendered cell text
+  // and shows a draggable visual preview so the user can copy the computed
+  // position/size instead of doing the math by hand.
+  const LAYOUT_REQUIRED_COLUMNS = ["QT_ESQUERDA", "QT_TOPO", "QT_TAMANHO", "QT_ALTURA"];
+  const LAYOUT_EXTRA_COLUMNS = ["DS_LABEL", "NM_ATRIBUTO"];
+  const LAYOUT_SNAP = 5;
+  const LAYOUT_GRID_ID_ATTR = "data-tex-layout-grid-id";
+
+  function parseBrNumber(text) {
+    const normalized = String(text || "").trim().replace(/\./g, "").replace(",", ".");
+    const value = Number.parseFloat(normalized);
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  function formatBrNumber(value) {
+    return value.toFixed(2).replace(".", ",");
+  }
+
+  function findLayoutHeaderRows() {
+    const headerRows = new Set();
+    document.querySelectorAll(".slick-header-column").forEach((headerCell) => {
+      const colName = headerCell.id.replace(/^slickgrid_\d+_?/, "");
+      if (LAYOUT_REQUIRED_COLUMNS.includes(colName)) {
+        const headerRow = headerCell.parentElement;
+        if (headerRow) {
+          headerRows.add(headerRow);
+        }
+      }
+    });
+    return [...headerRows].filter((headerRow) => {
+      const cols = [...headerRow.querySelectorAll(".slick-header-column")].map((el) =>
+        el.id.replace(/^slickgrid_\d+_?/, "")
+      );
+      return LAYOUT_REQUIRED_COLUMNS.every((required) => cols.includes(required));
+    });
+  }
+
+  function findGridContainer(headerRow) {
+    let node = headerRow;
+    for (let i = 0; i < 8 && node; i++) {
+      node = node.parentElement;
+      if (node && node.querySelector(".slick-row")) {
+        return node;
+      }
+    }
+    return null;
+  }
+
+  function readLayoutColumns(headerRow) {
+    const headerCells = [...headerRow.querySelectorAll(".slick-header-column")];
+    const columns = {};
+    headerCells.forEach((cell, index) => {
+      const colName = cell.id.replace(/^slickgrid_\d+_?/, "");
+      if (LAYOUT_REQUIRED_COLUMNS.includes(colName) || LAYOUT_EXTRA_COLUMNS.includes(colName)) {
+        columns[colName] = index;
+      }
+    });
+    return columns;
+  }
+
+  function readLayoutFields(headerRow) {
+    const container = findGridContainer(headerRow);
+    if (!container) {
+      return [];
+    }
+    const columns = readLayoutColumns(headerRow);
+    const rows = [...container.querySelectorAll(".slick-row")];
+    return rows
+      .map((row) => {
+        const cells = [...row.children];
+        const get = (colName) => {
+          const index = columns[colName];
+          return index === undefined ? "" : (cells[index]?.innerText || "").trim();
+        };
+        return {
+          left: parseBrNumber(get("QT_ESQUERDA")),
+          top: parseBrNumber(get("QT_TOPO")),
+          width: parseBrNumber(get("QT_TAMANHO")),
+          height: parseBrNumber(get("QT_ALTURA")),
+          label: get("DS_LABEL") || get("NM_ATRIBUTO") || "(campo)"
+        };
+      })
+      .filter((field) => field.width > 0 && field.height > 0);
+  }
+
+  class LayoutCanvas {
+    constructor() {
+      this.container = null;
+      this.scale = 1;
+      this.newBoxes = [];
+    }
+
+    isOpen() {
+      return Boolean(this.container);
+    }
+
+    toggle(headerRow) {
+      if (this.isOpen()) {
+        this.close();
+      } else {
+        this.open(headerRow);
+      }
+    }
+
+    close() {
+      if (this.container) {
+        this.container.remove();
+        this.container = null;
+      }
+      this.newBoxes = [];
+    }
+
+    open(headerRow) {
+      this.close();
+      const existingFields = readLayoutFields(headerRow);
+      const maxRight = existingFields.reduce((acc, f) => Math.max(acc, f.left + f.width), 200);
+      const maxBottom = existingFields.reduce((acc, f) => Math.max(acc, f.top + f.height), 100);
+      const canvasWidthUnits = maxRight + 60;
+      const canvasHeightUnits = maxBottom + 200;
+      const maxDisplayWidth = Math.min(window.innerWidth * 0.7, 1000);
+      this.scale = Math.min(1, maxDisplayWidth / canvasWidthUnits);
+
+      const overlay = document.createElement("div");
+      overlay.className = "tex-scope-container tex-layout-container";
+
+      const header = document.createElement("div");
+      header.className = "tex-scope-header";
+      header.innerHTML = `<div class="tex-scope-title">Layout visual (somente leitura das posições existentes)</div>`;
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "tex-layout-add-button";
+      addBtn.innerText = "+ Novo campo";
+      addBtn.addEventListener("click", () => this._addBox(existingFields));
+      const close = document.createElement("button");
+      close.className = "tex-scope-close";
+      close.type = "button";
+      close.innerText = "×";
+      close.addEventListener("click", () => this.close());
+      header.append(addBtn, close);
+
+      const content = document.createElement("div");
+      content.className = "tex-scope-content tex-layout-content";
+
+      const canvas = document.createElement("div");
+      canvas.className = "tex-layout-canvas";
+      canvas.style.width = `${canvasWidthUnits * this.scale}px`;
+      canvas.style.height = `${canvasHeightUnits * this.scale}px`;
+      this.canvas = canvas;
+
+      existingFields.forEach((field) => {
+        canvas.appendChild(this._createBox(field, { editable: false }));
+      });
+
+      content.appendChild(canvas);
+      overlay.append(header, content);
+      document.body.appendChild(overlay);
+      this.container = overlay;
+    }
+
+    _addBox(existingFields) {
+      const last = existingFields[existingFields.length - 1];
+      const field = last
+        ? { left: last.left + last.width + LAYOUT_SNAP, top: last.top, width: 70, height: 17, label: "Novo campo" }
+        : { left: LAYOUT_SNAP, top: LAYOUT_SNAP, width: 70, height: 17, label: "Novo campo" };
+      const box = this._createBox(field, { editable: true });
+      this.canvas.appendChild(box);
+    }
+
+    _createBox(field, { editable }) {
+      const box = document.createElement("div");
+      box.className = "tex-layout-box";
+      if (editable) {
+        box.classList.add("tex-layout-box-new");
+      }
+      const label = document.createElement("div");
+      label.className = "tex-layout-box-label";
+      label.innerText = field.label;
+      const info = document.createElement("div");
+      info.className = "tex-layout-box-info";
+
+      const state = { ...field };
+      const applyGeometry = () => {
+        box.style.left = `${state.left * this.scale}px`;
+        box.style.top = `${state.top * this.scale}px`;
+        box.style.width = `${Math.max(state.width * this.scale, 12)}px`;
+        box.style.height = `${Math.max(state.height * this.scale, 10)}px`;
+        info.innerText = `Esquerda ${formatBrNumber(state.left)} · Topo ${formatBrNumber(state.top)} · Tamanho ${formatBrNumber(state.width)} · Altura ${formatBrNumber(state.height)}`;
+      };
+      applyGeometry();
+
+      box.append(label, info);
+
+      if (editable) {
+        const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "tex-layout-copy-button";
+        copyBtn.innerText = "Copiar";
+        copyBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const text = `Esquerda: ${formatBrNumber(state.left)}\nTopo: ${formatBrNumber(state.top)}\nTamanho: ${formatBrNumber(state.width)}\nAltura: ${formatBrNumber(state.height)}`;
+          navigator.clipboard.writeText(text).catch(() => {});
+          copyBtn.innerText = "Copiado!";
+          window.setTimeout(() => {
+            copyBtn.innerText = "Copiar";
+          }, 700);
+        });
+        const resizeHandle = document.createElement("div");
+        resizeHandle.className = "tex-layout-resize-handle";
+        box.append(copyBtn, resizeHandle);
+
+        let drag = null;
+        box.addEventListener("mousedown", (event) => {
+          if (event.target === resizeHandle || event.target === copyBtn) {
+            return;
+          }
+          drag = { mode: "move", startX: event.clientX, startY: event.clientY, origLeft: state.left, origTop: state.top };
+          event.preventDefault();
+        });
+        resizeHandle.addEventListener("mousedown", (event) => {
+          drag = {
+            mode: "resize",
+            startX: event.clientX,
+            startY: event.clientY,
+            origWidth: state.width,
+            origHeight: state.height
+          };
+          event.preventDefault();
+          event.stopPropagation();
+        });
+        window.addEventListener("mousemove", (event) => {
+          if (!drag) {
+            return;
+          }
+          const dxUnits = (event.clientX - drag.startX) / this.scale;
+          const dyUnits = (event.clientY - drag.startY) / this.scale;
+          if (drag.mode === "move") {
+            state.left = Math.max(0, Math.round((drag.origLeft + dxUnits) / LAYOUT_SNAP) * LAYOUT_SNAP);
+            state.top = Math.max(0, Math.round((drag.origTop + dyUnits) / LAYOUT_SNAP) * LAYOUT_SNAP);
+          } else {
+            state.width = Math.max(LAYOUT_SNAP, Math.round((drag.origWidth + dxUnits) / LAYOUT_SNAP) * LAYOUT_SNAP);
+            state.height = Math.max(LAYOUT_SNAP, Math.round((drag.origHeight + dyUnits) / LAYOUT_SNAP) * LAYOUT_SNAP);
+          }
+          applyGeometry();
+        });
+        window.addEventListener("mouseup", () => {
+          drag = null;
+        });
+      }
+
+      return box;
+    }
+  }
+
+  class ReportLayoutRenderer extends Renderer {
+    constructor() {
+      super();
+      this.canvas = new LayoutCanvas();
+      this.buttons = new WeakMap();
+    }
+    condition({ type, addedNodes }) {
+      if (type !== "childList") {
+        return false;
+      }
+      for (const node of addedNodes.values()) {
+        if (!node.querySelectorAll) {
+          continue;
+        }
+        if (node.classList && node.classList.contains("slick-header-column")) {
+          return true;
+        }
+        if (node.querySelector(".slick-header-column")) {
+          return true;
+        }
+      }
+      return false;
+    }
+    render({ showReportLayout }) {
+      document.querySelectorAll(".tex-layout-button").forEach((btn) => btn.remove());
+      if (!showReportLayout) {
+        this.canvas.close();
+        return;
+      }
+      const headerRows = findLayoutHeaderRows();
+      headerRows.forEach((headerRow, index) => {
+        headerRow.setAttribute(LAYOUT_GRID_ID_ATTR, String(index));
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tex-layout-button";
+        button.innerText = "📐 Layout visual";
+        button.addEventListener("click", () => this.canvas.toggle(headerRow));
+        document.body.appendChild(button);
+      });
+    }
+  }
+
   manager.add(new FieldDetailsRenderer());
   manager.add(new GridDetailsRenderer());
   manager.add(new PanelDetailsRenderer());
   manager.add(new RecentFeaturesRenderer());
   manager.add(new UserLocaleRenderer());
   manager.add(new InspectModeRenderer());
+  manager.add(new ReportLayoutRenderer());
 
   window.addEventListener("message", (event) => {
     if (event.source !== window) {
