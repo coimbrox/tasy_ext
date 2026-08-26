@@ -119,7 +119,13 @@
       }
       if (type === "childList") {
         for (const node of addedNodes.values()) {
+          if (!node.querySelectorAll) {
+            continue;
+          }
           if (node.classList && node.classList.contains("w-attr-container")) {
+            return true;
+          }
+          if (node.querySelector(".w-attr-container")) {
             return true;
           }
         }
@@ -168,7 +174,13 @@
         return false;
       }
       for (const node of addedNodes.values()) {
+        if (!node.querySelectorAll) {
+          continue;
+        }
         if (node.classList && node.classList.contains("slick-header-column")) {
+          return true;
+        }
+        if (node.querySelector(".slick-header-column")) {
           return true;
         }
       }
@@ -262,7 +274,13 @@
           return true;
         }
         for (const node of addedNodes.values()) {
+          if (!node.querySelectorAll) {
+            continue;
+          }
           if (node.classList && node.classList.contains(containerClass)) {
+            return true;
+          }
+          if (node.querySelector(`.${containerClass}`)) {
             return true;
           }
         }
