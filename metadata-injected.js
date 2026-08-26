@@ -127,6 +127,46 @@
     };
   }
 
+  // Lets the user drag `target` around the viewport by pressing on `handle`.
+  // A plain click (no movement) on the handle still reaches its own click
+  // listeners normally; only an actual drag suppresses the following click.
+  function makeDraggable(handle, target) {
+    let drag = null;
+    let moved = false;
+    handle.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      drag = { offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
+      moved = false;
+      event.preventDefault();
+    });
+    window.addEventListener("mousemove", (event) => {
+      if (!drag) {
+        return;
+      }
+      moved = true;
+      target.style.position = "fixed";
+      target.style.transform = "none";
+      target.style.right = "auto";
+      target.style.bottom = "auto";
+      target.style.left = `${event.clientX - drag.offsetX}px`;
+      target.style.top = `${event.clientY - drag.offsetY}px`;
+    });
+    window.addEventListener("mouseup", () => {
+      if (drag && moved) {
+        const suppressClick = (event) => {
+          event.stopPropagation();
+          event.preventDefault();
+          handle.removeEventListener("click", suppressClick, true);
+        };
+        handle.addEventListener("click", suppressClick, true);
+      }
+      drag = null;
+    });
+  }
+
   // --- clipboard for every tex-copy-me / [data-clipboard] element ---------
   document.addEventListener("click", (event) => {
     const target = event.target.closest(".tex-copy-me, [data-clipboard]");
@@ -863,8 +903,9 @@
       overlay.className = "tex-scope-container tex-layout-container";
 
       const header = document.createElement("div");
-      header.className = "tex-scope-header";
+      header.className = "tex-scope-header tex-layout-header";
       header.innerHTML = `<div class="tex-scope-title">Layout visual (somente leitura das posições existentes)</div>`;
+      makeDraggable(header, overlay);
       const addBtn = document.createElement("button");
       addBtn.type = "button";
       addBtn.className = "tex-layout-add-button";
@@ -1027,6 +1068,7 @@
         button.className = "tex-layout-button";
         button.innerText = "📐 Layout visual";
         button.addEventListener("click", () => this.canvas.toggle(headerRow));
+        makeDraggable(button, button);
         document.body.appendChild(button);
       });
     }

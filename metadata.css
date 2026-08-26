@@ -191,6 +191,10 @@
   max-height: 80vh;
 }
 
+.tex-layout-header {
+  cursor: move;
+}
+
 .tex-layout-add-button {
   margin-right: 10px;
   padding: 6px 10px;
