@@ -11,6 +11,14 @@
       <div class="header">
         <img src="icon.png" alt="Logo" class="logo" />
         <h1>Tasy DevTools</h1>
+        <a href="manual.html" target="_blank" class="manual-link" title="Ver manual da extensão">📖 Manual</a>
+      </div>
+
+      <div class="section-title">Dicionário de dados</div>
+
+      <div class="field">
+        <input id="dictionarySearch" type="text" placeholder="Buscar campo, coluna ou tabela..." autocomplete="off" />
+        <div id="dictionaryResults" class="dictionary-results"></div>
       </div>
 
       <div class="section-title">Metadados TASY</div>
@@ -54,13 +62,18 @@
       <div class="section-title">Registrar Processo</div>
 
       <div class="field">
-        <p class="trace-hint">Inicie antes de executar o processo que quer documentar (ex.: criar um usuário). Ao parar, o passo a passo é copiado automaticamente.</p>
+        <p class="trace-hint">Inicie antes de executar o processo que quer documentar (ex.: criar um usuário). Ao parar, o passo a passo é copiado automaticamente e um relatório em HTML (com prints de cada passo) é baixado — pronto para anexar num chamado.</p>
         <div class="actions">
           <button id="toggleTraceBtn" type="button" class="primary">Iniciar registro</button>
         </div>
       </div>
 
       <p id="status" class="status"></p>
+
+      <div class="popup-footer">
+        <a href="manual.html#apoie" target="_blank">☕ Apoie o projeto</a>
+        <a href="manual.html#contato" target="_blank">💬 Sugestões e contato</a>
+      </div>
     </main>
 
     <script src="popup.js"></script>

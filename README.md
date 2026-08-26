@@ -1,10 +1,16 @@
 # Tasy DevTools (Chrome Extension)
 
-Extensão Chrome (Manifest V3) para desenvolvedores e times de suporte do TASY: monitora oscilações de desempenho e exibe metadados técnicos das telas (nos moldes da Tasy Metadata Extension).
+Extensão Chrome (Manifest V3) para desenvolvedores e times de suporte do TASY: monitora oscilações de desempenho, exibe metadados técnicos das telas (nos moldes da Tasy Metadata Extension), monta um dicionário de dados pesquisável e grava processos passo a passo (com prints) para documentação e chamados de suporte.
 
 Funciona em qualquer ambiente TASY cujo domínio contenha "tasy" no hostname (ex.: `tasy.suaempresa.com.br`, `tasyhml.suaempresa.com.br`, `dev.tasy.suaempresa.com.br`) — não é necessário configurar nada, ela ativa suas funcionalidades automaticamente nesses domínios.
 
 ## O que faz
+
+Um link **📖 Manual** no topo do popup abre uma página explicando todas as funcionalidades abaixo em detalhe.
+
+### Dicionário de dados
+
+Enquanto você navega pelo TASY com os overlays de **Detalhes de campo**/**Detalhes de grid**/**Detalhes de painel** ativos, a extensão aprende sozinha os nomes técnicos de campos, colunas e painéis encontrados pelo caminho, junto com o rótulo visível na tela. No campo de busca no topo do popup, digite parte do nome técnico, do rótulo ou da tabela para encontrar; clique num resultado para copiar o nome técnico. Cresce naturalmente com o uso, guardado localmente.
 
 ### Registrar Processo
 
@@ -12,15 +18,14 @@ No popup, em **Registrar Processo**, um único botão liga e desliga a gravaçã
 
 - **Iniciar registro**: zera o log e começa a registrar, em ordem cronológica: cada tela aberta no TASY, cliques em botões/links e valores preenchidos em campos (exceto campos de senha). Internamente também mede cada requisição real (fetch/XHR) e a latência de rede, usados só para detectar oscilação/lentidão — essas linhas não entram no texto copiado, que fica focado no passo a passo.
 - Execute normalmente o processo que quer documentar (ex.: criar um usuário).
-- **Parar registro**: encerra a gravação e copia automaticamente para a área de transferência um resumo legível de tudo que aconteceu na aba ativa, por exemplo:
+- **Parar registro**: encerra a gravação e automaticamente (1) copia para a área de transferência um resumo legível de tudo que aconteceu na aba ativa, e (2) baixa um relatório `.html` com o mesmo passo a passo, incluindo um print da tela a cada passo — pronto para anexar num chamado de suporte (ex.: Philips). Exemplo do texto copiado:
   ```
   [14:32:10] 🖥️ Tela aberta: Cadastro de Usuários
   [14:32:12] ⌨️ Preencheu "Código": 12345
   [14:32:15] 🖱️ Clicou em: Salvar
   [14:32:16] ⚠️ oscillating — extreme_jitter (latência: 1850ms)
   ```
-  Pronto para colar direto numa instrução de processo ou num chamado de suporte.
-- **Atenção**: como o registro guarda os valores digitados nos campos, revise o texto copiado antes de compartilhar caso o processo documentado envolva dados sensíveis (ex.: dados de paciente).
+- **Atenção**: como o registro guarda os valores digitados nos campos e um print de cada passo, revise o texto/arquivo antes de compartilhar caso o processo documentado envolva dados sensíveis (ex.: dados de paciente, inclusive de terceiros que apareçam incidentalmente na tela).
 
 ### Metadados TASY
 
@@ -58,8 +63,9 @@ Clicar em qualquer badge/label copia o valor para a área de transferência. Os 
 ## Arquivos
 
 - `manifest.json`: permissões (`tabs`, `storage`, `scripting`), ícone da extensão, `background` e `content_scripts`.
-- `popup.html` / `popup.css` / `popup.js`: interface do popup (opções de metadados e tracer).
-- `background.js`: tracer de performance e recarga de estilos.
+- `popup.html` / `popup.css` / `popup.js`: interface do popup (dicionário de dados, opções de metadados e registro de processo).
+- `manual.html`: página de ajuda com a explicação de todas as funcionalidades, aberta pelo link "📖 Manual" no popup.
+- `background.js`: log de performance/trace (incluindo captura de screenshots) e recarga de estilos.
 - `content.js`: monitor de latência e ponte de `chrome.storage` com o script de metadados.
 - `metadata-injected.js`: roda no contexto da própria página TASY (`world: "MAIN"`) para ler o AngularJS/DOM e renderizar os overlays de metadados.
 - `metadata.css`: estilos dos overlays de metadados (campos, grid, painel, recentes, inspeção).

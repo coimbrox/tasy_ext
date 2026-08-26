@@ -1,10 +1,13 @@
 const TRACE_STORAGE_KEY = "performanceTraceLog";
+const TRACE_SCREENSHOTS_KEY = "traceScreenshots";
 const TRACE_MAX_ENTRIES = 500;
+const SCREENSHOT_KINDS = new Set(["navigation", "interaction"]);
 
 function normalizeTraceEvent(event, senderTab) {
   const safeEvent = typeof event === "object" && event ? event : {};
   const kind = ["request", "navigation", "interaction"].includes(safeEvent.kind) ? safeEvent.kind : "probe";
   return {
+    id: crypto.randomUUID(),
     kind,
     label: typeof safeEvent.label === "string" ? safeEvent.label : null,
     action: typeof safeEvent.action === "string" ? safeEvent.action : null,
@@ -30,20 +33,42 @@ function normalizeTraceEvent(event, senderTab) {
   };
 }
 
+async function captureStepScreenshot(entryId, senderTab) {
+  if (!senderTab || typeof senderTab.windowId !== "number") {
+    return;
+  }
+
+  try {
+    const dataUrl = await chrome.tabs.captureVisibleTab(senderTab.windowId, { format: "jpeg", quality: 50 });
+    const data = await chrome.storage.local.get([TRACE_SCREENSHOTS_KEY]);
+    const screenshots = data[TRACE_SCREENSHOTS_KEY] && typeof data[TRACE_SCREENSHOTS_KEY] === "object" ? data[TRACE_SCREENSHOTS_KEY] : {};
+    screenshots[entryId] = dataUrl;
+    await chrome.storage.local.set({ [TRACE_SCREENSHOTS_KEY]: screenshots });
+  } catch (_error) {
+    // Capture can fail (rate limit, tab not visible, etc) - the text entry is kept regardless.
+  }
+}
+
 async function appendPerformanceTraceEvent(event, senderTab) {
   const entry = normalizeTraceEvent(event, senderTab);
   const data = await chrome.storage.local.get([TRACE_STORAGE_KEY]);
   const current = Array.isArray(data[TRACE_STORAGE_KEY]) ? data[TRACE_STORAGE_KEY] : [];
   const updated = [...current, entry].slice(-TRACE_MAX_ENTRIES);
   await chrome.storage.local.set({ [TRACE_STORAGE_KEY]: updated });
+
+  if (SCREENSHOT_KINDS.has(entry.kind)) {
+    await captureStepScreenshot(entry.id, senderTab);
+  }
+
   return entry;
 }
 
 async function getPerformanceTraceLog(limit = 120) {
-  const data = await chrome.storage.local.get([TRACE_STORAGE_KEY]);
+  const data = await chrome.storage.local.get([TRACE_STORAGE_KEY, TRACE_SCREENSHOTS_KEY]);
   const current = Array.isArray(data[TRACE_STORAGE_KEY]) ? data[TRACE_STORAGE_KEY] : [];
+  const screenshots = data[TRACE_SCREENSHOTS_KEY] && typeof data[TRACE_SCREENSHOTS_KEY] === "object" ? data[TRACE_SCREENSHOTS_KEY] : {};
   const normalizedLimit = Number.isFinite(Number(limit)) ? Math.max(1, Math.min(TRACE_MAX_ENTRIES, Number(limit))) : 120;
-  return current.slice(-normalizedLimit);
+  return current.slice(-normalizedLimit).map((entry) => (screenshots[entry.id] ? { ...entry, screenshot: screenshots[entry.id] } : entry));
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

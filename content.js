@@ -337,6 +337,8 @@ const METADATA_OPTION_KEYS = [
 ];
 const RECENT_FEATURES_KEY = "recentFeatures";
 const RECENT_FEATURES_MAX = 20;
+const DATA_DICTIONARY_KEY = "dataDictionary";
+const DATA_DICTIONARY_MAX_ENTRIES = 3000;
 
 async function sendMetadataOptions() {
   if (!isTasyHostname(window.location.hostname)) {
@@ -374,6 +376,37 @@ async function removeRecentFeature(feature) {
   const current = Array.isArray(data[RECENT_FEATURES_KEY]) ? data[RECENT_FEATURES_KEY] : [];
   const updated = current.filter((item) => item.code !== feature.code);
   await chrome.storage.local.set({ [RECENT_FEATURES_KEY]: updated });
+}
+
+async function upsertDictionaryEntry(entry) {
+  if (!entry || !entry.kind || !entry.name) {
+    return;
+  }
+
+  const key = `${entry.kind}:${entry.name}`;
+  const data = await chrome.storage.local.get([DATA_DICTIONARY_KEY]);
+  const dictionary = data[DATA_DICTIONARY_KEY] && typeof data[DATA_DICTIONARY_KEY] === "object" ? data[DATA_DICTIONARY_KEY] : {};
+
+  const existing = dictionary[key];
+  dictionary[key] = {
+    kind: entry.kind,
+    name: entry.name,
+    label: entry.label || existing?.label || null,
+    table: entry.table || existing?.table || null,
+    view: entry.view ?? existing?.view ?? null,
+    count: (existing?.count || 0) + 1,
+    lastSeenAt: new Date().toISOString()
+  };
+
+  const keys = Object.keys(dictionary);
+  if (keys.length > DATA_DICTIONARY_MAX_ENTRIES) {
+    keys
+      .sort((a, b) => new Date(dictionary[a].lastSeenAt) - new Date(dictionary[b].lastSeenAt))
+      .slice(0, keys.length - DATA_DICTIONARY_MAX_ENTRIES)
+      .forEach((staleKey) => delete dictionary[staleKey]);
+  }
+
+  await chrome.storage.local.set({ [DATA_DICTIONARY_KEY]: dictionary });
 }
 
 window.addEventListener("message", (event) => {
@@ -416,6 +449,11 @@ window.addEventListener("message", (event) => {
       origin: window.location.origin,
       ...data.entry
     });
+    return;
+  }
+
+  if (data.type === "DICTIONARY_ENTRY") {
+    void upsertDictionaryEntry(data.entry);
   }
 });
 

@@ -37,6 +37,19 @@ body {
   flex-shrink: 0;
 }
 
+.manual-link {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.manual-link:hover {
+  text-decoration: underline;
+}
+
 h1 {
   margin: 0;
   font-size: 15px;
@@ -151,6 +164,67 @@ button.primary.recording:hover {
   color: rgba(15, 23, 42, 0.65);
 }
 
+#dictionarySearch {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(15, 23, 42, 0.25);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+#dictionarySearch:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+}
+
+.dictionary-results {
+  margin-top: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.dictionary-item {
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.dictionary-item:hover {
+  background: var(--surface-2);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.dictionary-item-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dictionary-item-name {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.dictionary-item-label {
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.dictionary-item-meta {
+  font-size: 10px;
+  color: rgba(15, 23, 42, 0.55);
+  margin-top: 1px;
+}
+
 .status {
   margin: 10px 14px 0;
   font-size: 12px;
@@ -167,6 +241,25 @@ button.primary.recording:hover {
 
 .status.error {
   color: #dc2626;
+}
+
+.popup-footer {
+  display: flex;
+  justify-content: space-between;
+  margin: 14px 14px 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.popup-footer a {
+  font-size: 11px;
+  color: rgba(15, 23, 42, 0.55);
+  text-decoration: none;
+}
+
+.popup-footer a:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -192,5 +285,31 @@ button.primary.recording:hover {
 
   .section-title {
     border-top-color: rgba(248, 250, 252, 0.15);
+  }
+
+  #dictionarySearch {
+    background: rgba(248, 250, 252, 0.06);
+    color: var(--ink);
+    border-color: rgba(248, 250, 252, 0.25);
+  }
+
+  .dictionary-item:hover {
+    border-color: rgba(248, 250, 252, 0.2);
+  }
+
+  .dictionary-item-label {
+    color: var(--ink);
+  }
+
+  .dictionary-item-meta {
+    color: rgba(248, 250, 252, 0.55);
+  }
+
+  .popup-footer {
+    border-top-color: rgba(248, 250, 252, 0.15);
+  }
+
+  .popup-footer a {
+    color: rgba(248, 250, 252, 0.55);
   }
 }

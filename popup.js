@@ -15,7 +15,61 @@ const metadataCheckboxes = Object.fromEntries(
 const clearRecentFeaturesBtn = document.getElementById("clearRecentFeaturesBtn");
 const reloadStylesheetsBtn = document.getElementById("reloadStylesheetsBtn");
 const toggleTraceBtn = document.getElementById("toggleTraceBtn");
+const dictionarySearchEl = document.getElementById("dictionarySearch");
+const dictionaryResultsEl = document.getElementById("dictionaryResults");
 const statusEl = document.getElementById("status");
+
+const DICTIONARY_KIND_LABELS = {
+  field: "Campo",
+  "grid-column": "Coluna de grid",
+  panel: "Painel"
+};
+
+function renderDictionaryResults(matches) {
+  dictionaryResultsEl.innerHTML = "";
+  if (matches.length === 0) {
+    return;
+  }
+
+  matches.slice(0, 30).forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "dictionary-item";
+    const kindLabel = DICTIONARY_KIND_LABELS[entry.kind] || entry.kind;
+    const details = [entry.table, entry.view ? `view ${entry.view}` : null].filter(Boolean).join(" · ");
+    row.innerHTML = `
+      <div class="dictionary-item-main">
+        <span class="dictionary-item-name">${escapeHtml(entry.name)}</span>
+        ${entry.label ? `<span class="dictionary-item-label">${escapeHtml(entry.label)}</span>` : ""}
+      </div>
+      <div class="dictionary-item-meta">${escapeHtml(kindLabel)}${details ? ` · ${escapeHtml(details)}` : ""}</div>
+    `;
+    row.addEventListener("click", () => {
+      navigator.clipboard.writeText(entry.name).catch(() => {});
+      setStatus(`"${entry.name}" copiado.`, "ok");
+    });
+    dictionaryResultsEl.appendChild(row);
+  });
+}
+
+dictionarySearchEl.addEventListener("input", async () => {
+  const query = dictionarySearchEl.value.trim().toLowerCase();
+  if (!query) {
+    renderDictionaryResults([]);
+    return;
+  }
+
+  const data = await chrome.storage.local.get(["dataDictionary"]);
+  const dictionary = data.dataDictionary && typeof data.dataDictionary === "object" ? data.dataDictionary : {};
+  const matches = Object.values(dictionary).filter((entry) => {
+    return (
+      (entry.name && entry.name.toLowerCase().includes(query)) ||
+      (entry.label && entry.label.toLowerCase().includes(query)) ||
+      (entry.table && entry.table.toLowerCase().includes(query))
+    );
+  });
+  matches.sort((a, b) => b.count - a.count);
+  renderDictionaryResults(matches);
+});
 
 function setStatus(message, type = "") {
   statusEl.textContent = message;
@@ -109,6 +163,64 @@ function formatTraceEntry(entry) {
   return null;
 }
 
+function escapeHtml(text) {
+  return String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildHtmlReport(entries) {
+  const generatedAt = new Date().toLocaleString("pt-BR");
+  const steps = entries
+    .map((entry) => {
+      const text = formatTraceEntry(entry);
+      if (!text) {
+        return "";
+      }
+      const image = entry.screenshot
+        ? `<img src="${entry.screenshot}" alt="Print do passo" class="step-shot" />`
+        : "";
+      return `<div class="step"><p class="step-text">${escapeHtml(text)}</p>${image}</div>`;
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Registro de processo TASY</title>
+<style>
+  body { font-family: "Segoe UI", Arial, sans-serif; background: #F8FAFC; color: #0F172A; margin: 0; padding: 24px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .generated-at { font-size: 12px; color: #64748B; margin: 0 0 24px; }
+  .step { border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; background: #ffffff; }
+  .step-text { margin: 0 0 8px; font-size: 14px; }
+  .step-shot { max-width: 100%; border: 1px solid #E2E8F0; border-radius: 4px; display: block; }
+</style>
+</head>
+<body>
+<h1>Registro de processo TASY</h1>
+<p class="generated-at">Gerado em ${escapeHtml(generatedAt)} — Tasy DevTools</p>
+${steps}
+</body>
+</html>`;
+}
+
+function downloadHtmlReport(html, filenameSuffix) {
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `tasy-processo-${filenameSuffix}.html`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function setTraceButtonState(active) {
   toggleTraceBtn.textContent = active ? "Parar registro" : "Iniciar registro";
   toggleTraceBtn.classList.toggle("recording", active);
@@ -124,7 +236,7 @@ toggleTraceBtn.addEventListener("click", async () => {
   const isActive = Boolean(data[TRACE_ACTIVE_KEY]);
 
   if (!isActive) {
-    await chrome.storage.local.set({ [TRACE_ACTIVE_KEY]: true, performanceTraceLog: [] });
+    await chrome.storage.local.set({ [TRACE_ACTIVE_KEY]: true, performanceTraceLog: [], traceScreenshots: {} });
     setTraceButtonState(true);
     setStatus("Registro iniciado. Execute o processo no TASY normalmente.", "ok");
     return;
@@ -156,7 +268,11 @@ toggleTraceBtn.addEventListener("click", async () => {
     }
 
     await navigator.clipboard.writeText(lines.join("\n"));
-    setStatus(`Registro copiado (${lines.length} evento(s)).`, "ok");
+
+    const filenameSuffix = new Date().toISOString().replace(/[:.]/g, "-");
+    downloadHtmlReport(buildHtmlReport(activeTabLog), filenameSuffix);
+
+    setStatus(`Registro copiado e relatório baixado (${lines.length} evento(s)).`, "ok");
   } catch (error) {
     setStatus(`Falha ao copiar registro: ${error.message || String(error)}`, "error");
   }

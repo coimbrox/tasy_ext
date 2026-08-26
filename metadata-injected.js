@@ -278,6 +278,9 @@
           wrapper.appendChild(this._createLabel(locatorValue));
         }
         container.insertAdjacentElement("afterbegin", wrapper);
+
+        const label = container.querySelector(".w-attr-container__label")?.innerText?.trim();
+        sendToBridge("DICTIONARY_ENTRY", { entry: { kind: "field", name: attrName, label: label || null } });
       });
     }
     _createLabel(text) {
@@ -331,11 +334,16 @@
       });
       document.querySelectorAll(".slick-header-column").forEach((el) => {
         const columnName = el.id.replace(/^slickgrid_\d+_?/, "");
+        const headerText = el.innerText?.trim();
         const label = document.createElement("span");
         label.classList.add("tex-fellow-label", "tex-grid-label", "tex-copy-me");
         label.innerText = columnName;
         label.title = columnName;
         el.appendChild(label);
+
+        sendToBridge("DICTIONARY_ENTRY", {
+          entry: { kind: "grid-column", name: columnName, label: headerText || null }
+        });
       });
     }
   }
@@ -431,6 +439,11 @@
             return;
           }
           const { code, type, view, table } = extracted;
+          if (code && table) {
+            sendToBridge("DICTIONARY_ENTRY", {
+              entry: { kind: "panel", name: String(code), label: table, table, view: view ?? null }
+            });
+          }
           const info = document.createElement("div");
           info.classList.add("tex-panel-info-container");
           info.appendChild(this._createItem(code, type || "CODE"));
