@@ -233,14 +233,17 @@ void syncTraceActiveState();
 function describeField(el) {
   const container = el.closest(".w-attr-container[w-attr-name]");
   if (container) {
-    const attrName = container.getAttribute("w-attr-name");
-    const label = container.querySelector("label")?.innerText?.trim();
-    return label ? `${label} (${attrName})` : attrName;
+    const label = container.querySelector(".w-attr-container__label, label")?.innerText?.trim();
+    return label || container.getAttribute("w-attr-name");
   }
 
   const label = el.closest("label")?.innerText?.trim();
   if (label) {
     return label;
+  }
+
+  if (typeof el.className === "string" && el.className.toLowerCase().includes("search")) {
+    return "Busca";
   }
 
   return el.getAttribute("aria-label") || el.getAttribute("placeholder") || el.name || el.id || el.tagName.toLowerCase();
