@@ -3,50 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TASY Cookie Switcher</title>
+    <title>Tasy DevTools</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <main class="container">
       <div class="header">
         <img src="icon.png" alt="Logo" class="logo" />
-        <h1>TASY Cookie Switcher</h1>
+        <h1>Tasy DevTools</h1>
       </div>
 
       <div class="field">
         <label for="domainPreset">Domínio configurado</label>
         <select id="domainPreset">
           <option value="auto">Usar aba ativa</option>
-          <option value="tasy.circulosaude.com.br">tasy.circulosaude.com.br</option>
-          <option value="tasyhml.circulosaude.com.br">tasyhml.circulosaude.com.br</option>
           <option value="custom">Outro domínio...</option>
         </select>
       </div>
 
       <div class="field">
         <label for="customDomain">Domínio personalizado</label>
-        <input id="customDomain" type="text" placeholder="ex: tasydev.circulosaude.com.br" disabled />
+        <input id="customDomain" type="text" placeholder="ex: tasy.suaempresa.com.br" disabled />
       </div>
 
       <div class="actions">
         <button id="saveDomainBtn" type="button">Salvar domínio</button>
-      </div>
-
-      <div class="field inline-field">
-        <label for="showServerFlag" class="checkbox-label">
-          <input id="showServerFlag" type="checkbox" />
-          Mostrar servidor no canto da tela
-        </label>
-      </div>
-
-      <div class="field">
-        <label for="badgePosition">Posição do badge</label>
-        <select id="badgePosition">
-          <option value="top-right">Superior direito</option>
-          <option value="top-left">Superior esquerdo</option>
-          <option value="bottom-right">Inferior direito</option>
-          <option value="bottom-left">Inferior esquerdo</option>
-        </select>
       </div>
 
       <div class="field">
@@ -75,6 +56,40 @@
           <button id="copyTraceBtn" type="button">Copiar log</button>
           <button id="clearTraceBtn" type="button">Limpar log</button>
         </div>
+      </div>
+
+      <div class="section-title">Metadados TASY</div>
+
+      <div class="field metadata-grid">
+        <label class="checkbox-label">
+          <input id="showFieldDetails" type="checkbox" />
+          Detalhes de campo
+        </label>
+        <label class="checkbox-label">
+          <input id="showGridDetails" type="checkbox" />
+          Detalhes de grid
+        </label>
+        <label class="checkbox-label">
+          <input id="showPanelDetails" type="checkbox" />
+          Detalhes de painel
+        </label>
+        <label class="checkbox-label">
+          <input id="showRecentFeatures" type="checkbox" />
+          Recentes (tela inicial)
+        </label>
+        <label class="checkbox-label">
+          <input id="showUserLocale" type="checkbox" />
+          Idioma do usuário no rodapé
+        </label>
+        <label class="checkbox-label">
+          <input id="inspectMode" type="checkbox" />
+          Modo inspeção
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="clearRecentFeaturesBtn" type="button">Limpar recentes</button>
+        <button id="reloadStylesheetsBtn" type="button">Recarregar estilos</button>
       </div>
 
       <p id="status" class="status"></p>

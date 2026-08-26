@@ -1,26 +1,36 @@
 :root {
   color-scheme: light dark;
-  font-family: Segoe UI, Arial, sans-serif;
+  --accent: #0284C7;
+  --accent-2: #0EA5E9;
+  --surface: #F8FAFC;
+  --surface-2: #EEF2F7;
+  --ink: #0F172A;
+  font-family: "Segoe UI", Calibri, Arial, sans-serif;
 }
 
 body {
   margin: 0;
-  min-width: 360px;
+  min-width: 380px;
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .container {
-  padding: 12px;
+  padding: 0 0 14px;
 }
 
 .header {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 12px 14px;
   margin-bottom: 12px;
+  background: var(--surface-2);
+  border-bottom: 3px solid var(--accent);
 }
 
 .logo {
-  height: 20px;
+  height: 22px;
   width: auto;
   max-width: 120px;
   object-fit: contain;
@@ -29,7 +39,17 @@ body {
 
 h1 {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+.container > .field,
+.container > .actions,
+.container > .section-title {
+  margin-left: 14px;
+  margin-right: 14px;
 }
 
 .field {
@@ -40,11 +60,32 @@ h1 {
   margin-top: 6px;
 }
 
+.section-title {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
 label {
   display: block;
   font-size: 12px;
   margin-bottom: 4px;
-  opacity: 0.85;
+  color: rgba(15, 23, 42, 0.75);
+}
+
+.metadata-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 10px;
 }
 
 .checkbox-label {
@@ -52,10 +93,13 @@ label {
   align-items: center;
   gap: 8px;
   margin-bottom: 0;
+  font-size: 12px;
+  color: var(--ink);
 }
 
 .checkbox-label input {
   margin: 0;
+  accent-color: var(--accent);
 }
 
 .value,
@@ -64,15 +108,27 @@ input,
 textarea {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #999;
+  border: 1px solid rgba(15, 23, 42, 0.25);
   border-radius: 6px;
   padding: 8px;
   font-size: 12px;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+select:focus,
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
 }
 
 .value {
   min-height: 18px;
-  background: rgba(127, 127, 127, 0.08);
+  background: var(--surface-2);
+  border-style: dashed;
   word-break: break-all;
 }
 
@@ -91,19 +147,35 @@ textarea {
 }
 
 button {
-  border: 1px solid #999;
+  border: 1px solid rgba(15, 23, 42, 0.25);
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  background: #ffffff;
+  color: var(--ink);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+button:hover {
+  border-color: var(--accent);
 }
 
 button.primary {
-  font-weight: 600;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+button.primary:hover {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
 }
 
 .status {
-  margin: 10px 0 0;
+  margin: 10px 14px 0;
   font-size: 12px;
   min-height: 16px;
 }
@@ -113,9 +185,45 @@ button.primary {
 }
 
 .status.warn {
-  color: #c17900;
+  color: #b45309;
 }
 
 .status.error {
-  color: #c62828;
+  color: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #0F172A;
+    --surface-2: rgba(248, 250, 252, 0.06);
+    --ink: #F8FAFC;
+  }
+
+  .value,
+  select,
+  input,
+  textarea {
+    background: rgba(248, 250, 252, 0.06);
+    color: var(--ink);
+    border-color: rgba(248, 250, 252, 0.25);
+  }
+
+  .value {
+    background: rgba(248, 250, 252, 0.04);
+  }
+
+  button {
+    background: rgba(248, 250, 252, 0.06);
+    color: var(--ink);
+    border-color: rgba(248, 250, 252, 0.25);
+  }
+
+  label,
+  .checkbox-label {
+    color: rgba(248, 250, 252, 0.85);
+  }
+
+  .section-title {
+    border-top-color: rgba(248, 250, 252, 0.15);
+  }
 }

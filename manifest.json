@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "TASY Cookie Switcher",
-  "description": "Lê e altera o cookie TASYAPPSERVER_TASY no domínio da aba ativa.",
-  "version": "1.0.0",
+  "name": "Tasy DevTools",
+  "description": "Monitora oscilações de desempenho, exibe metadados técnicos das telas do TASY (campos, grids, painéis) e permite trocar o cookie do servidor.",
+  "version": "1.1.0",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -15,7 +15,8 @@
   "permissions": [
     "cookies",
     "tabs",
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
     "http://*/*",
@@ -26,7 +27,7 @@
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png"
     },
-    "default_title": "TASY Cookie Switcher",
+    "default_title": "Tasy DevTools",
     "default_popup": "popup.html"
   },
   "content_scripts": [
@@ -38,6 +39,20 @@
       "js": [
         "content.js"
       ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "metadata-injected.js"
+      ],
+      "css": [
+        "metadata.css"
+      ],
+      "world": "MAIN",
       "run_at": "document_idle"
     }
   ]

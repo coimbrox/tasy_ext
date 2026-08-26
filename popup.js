@@ -1,15 +1,9 @@
 const COOKIE_NAME = "TASYAPPSERVER_TASY";
-const PRESET_DOMAINS = [
-  "tasy.circulosaude.com.br",
-  "tasyhml.circulosaude.com.br"
-];
 
 const domainEl = document.getElementById("domain");
 const domainPresetEl = document.getElementById("domainPreset");
 const customDomainEl = document.getElementById("customDomain");
 const saveDomainBtn = document.getElementById("saveDomainBtn");
-const showServerFlagEl = document.getElementById("showServerFlag");
-const badgePositionEl = document.getElementById("badgePosition");
 const currentValueEl = document.getElementById("currentValue");
 const newValueEl = document.getElementById("newValue");
 const refreshBtn = document.getElementById("refreshBtn");
@@ -17,6 +11,20 @@ const saveBtn = document.getElementById("saveBtn");
 const copyTraceBtn = document.getElementById("copyTraceBtn");
 const clearTraceBtn = document.getElementById("clearTraceBtn");
 const statusEl = document.getElementById("status");
+
+const METADATA_OPTION_KEYS = [
+  "showFieldDetails",
+  "showGridDetails",
+  "showPanelDetails",
+  "showRecentFeatures",
+  "showUserLocale",
+  "inspectMode"
+];
+const metadataCheckboxes = Object.fromEntries(
+  METADATA_OPTION_KEYS.map((key) => [key, document.getElementById(key)])
+);
+const clearRecentFeaturesBtn = document.getElementById("clearRecentFeaturesBtn");
+const reloadStylesheetsBtn = document.getElementById("reloadStylesheetsBtn");
 
 let activeTab = null;
 let targetCookieUrl = null;
@@ -37,11 +45,6 @@ function isTasyHostname(hostname) {
 
 function isValidHostname(hostname) {
   return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i.test(hostname);
-}
-
-function normalizeBadgePosition(position) {
-  const validPositions = new Set(["top-right", "top-left", "bottom-right", "bottom-left"]);
-  return validPositions.has(position) ? position : "bottom-right";
 }
 
 function normalizeCookieValue(value) {
@@ -105,18 +108,6 @@ async function getActiveTab() {
   return tabs[0] || null;
 }
 
-async function requestBadgeSync() {
-  const tab = await getActiveTab();
-  if (!tab || typeof tab.id !== "number") {
-    return;
-  }
-
-  await chrome.runtime.sendMessage({
-    type: "TASY_REQUEST_SERVER_BADGE_SYNC",
-    tabId: tab.id
-  });
-}
-
 async function hardReloadActiveTab() {
   const tab = await getActiveTab();
   if (!tab || typeof tab.id !== "number" || !isHttpOrHttps(tab.url)) {
@@ -169,20 +160,11 @@ function refreshCustomDomainState() {
 }
 
 async function loadDomainConfig() {
-  const data = await chrome.storage.local.get(["configuredDomain", "showServerFlag", "badgePosition"]);
+  const data = await chrome.storage.local.get(["configuredDomain"]);
   const configuredDomain = (data.configuredDomain || "").toLowerCase();
-  showServerFlagEl.checked = Boolean(data.showServerFlag);
-  badgePositionEl.value = normalizeBadgePosition(data.badgePosition);
 
   if (!configuredDomain) {
     domainPresetEl.value = "auto";
-    customDomainEl.value = "";
-    refreshCustomDomainState();
-    return;
-  }
-
-  if (PRESET_DOMAINS.includes(configuredDomain)) {
-    domainPresetEl.value = configuredDomain;
     customDomainEl.value = "";
     refreshCustomDomainState();
     return;
@@ -201,14 +183,10 @@ async function saveDomainConfig() {
   }
 
   if (configuredDomain && !isValidHostname(configuredDomain)) {
-    throw new Error("Domínio inválido. Exemplo: tasy.circulosaude.com.br");
+    throw new Error("Domínio inválido. Exemplo: tasy.suaempresa.com.br");
   }
 
-  await chrome.storage.local.set({
-    configuredDomain,
-    showServerFlag: Boolean(showServerFlagEl.checked),
-    badgePosition: normalizeBadgePosition(badgePositionEl.value)
-  });
+  await chrome.storage.local.set({ configuredDomain });
 }
 
 async function getConfiguredDomain() {
@@ -333,14 +311,12 @@ async function readCookie() {
   if (!lastCookie) {
     currentValueEl.value = "";
     setStatus(`Cookie ${COOKIE_NAME} não encontrado para esta URL.`, "warn");
-    await requestBadgeSync();
     return;
   }
 
   currentValueEl.value = lastCookie.value || "";
   newValueEl.value = lastCookie.value || "";
   setStatus("Cookie carregado com sucesso.", "ok");
-  await requestBadgeSync();
 }
 
 async function saveCookie() {
@@ -384,7 +360,6 @@ async function saveCookie() {
   }
 
   setStatus(`Cookie atualizado em ${saveResults.length} registro(s). Recarregando (2/2)...`, "ok");
-  await requestBadgeSync();
   const reloaded = await hardReloadActiveTab();
   if (!reloaded) {
     setStatus("Cookie salvo com sucesso. Recarregue a página manualmente.", "warn");
@@ -395,25 +370,12 @@ domainPresetEl.addEventListener("change", () => {
   refreshCustomDomainState();
 });
 
-showServerFlagEl.addEventListener("change", async () => {
-  await chrome.storage.local.set({ showServerFlag: Boolean(showServerFlagEl.checked) });
-  await requestBadgeSync();
-});
-
-badgePositionEl.addEventListener("change", async () => {
-  const normalized = normalizeBadgePosition(badgePositionEl.value);
-  badgePositionEl.value = normalized;
-  await chrome.storage.local.set({ badgePosition: normalized, badgeCoordinates: null });
-  await requestBadgeSync();
-});
-
 saveDomainBtn.addEventListener("click", async () => {
   setStatus("Salvando domínio...");
   try {
     await saveDomainConfig();
     setStatus("Domínio salvo. Lendo cookie...", "ok");
     await readCookie();
-    await requestBadgeSync();
   } catch (error) {
     setStatus(error.message || String(error), "error");
   }
@@ -472,10 +434,49 @@ clearTraceBtn.addEventListener("click", async () => {
   }
 });
 
+async function loadMetadataOptions() {
+  const data = await chrome.storage.local.get(METADATA_OPTION_KEYS);
+  METADATA_OPTION_KEYS.forEach((key) => {
+    metadataCheckboxes[key].checked = Boolean(data[key]);
+  });
+}
+
+METADATA_OPTION_KEYS.forEach((key) => {
+  metadataCheckboxes[key].addEventListener("change", async () => {
+    await chrome.storage.local.set({ [key]: metadataCheckboxes[key].checked });
+  });
+});
+
+clearRecentFeaturesBtn.addEventListener("click", async () => {
+  setStatus("Limpando recentes...");
+  try {
+    await chrome.storage.local.set({ recentFeatures: [] });
+    setStatus("Lista de recentes limpa.", "ok");
+  } catch (error) {
+    setStatus(`Falha ao limpar recentes: ${error.message || String(error)}`, "error");
+  }
+});
+
+reloadStylesheetsBtn.addEventListener("click", async () => {
+  setStatus("Recarregando estilos...");
+  try {
+    const tab = await getActiveTab();
+    if (!tab || typeof tab.id !== "number") {
+      setStatus("Não foi possível identificar a aba ativa.", "warn");
+      return;
+    }
+    await chrome.runtime.sendMessage({ type: "TASY_RELOAD_STYLESHEETS", tabId: tab.id });
+    setStatus("Estilos recarregados.", "ok");
+  } catch (error) {
+    setStatus(`Falha ao recarregar estilos: ${error.message || String(error)}`, "error");
+  }
+});
+
 (async () => {
   setStatus("Carregando contexto da aba...");
   try {
     await loadDomainConfig();
+    await loadMetadataOptions();
     await readCookie();
   } catch (error) {
     setStatus(error.message || String(error), "error");

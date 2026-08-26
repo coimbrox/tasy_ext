@@ -1,129 +1,15 @@
-const BADGE_ID = "tasy-server-badge";
-const BADGE_MARGIN = 8;
 const PERFORMANCE_SAMPLE_LIMIT = 8;
 const PERFORMANCE_POLL_INTERVAL_MS = 8000;
 const PERFORMANCE_TIMEOUT_MS = 4500;
 
-const BADGE_STATUS_COLORS = {
-  normal: "#0b5cab",
-  oscillating: "#d88700",
-  slow: "#c73a3a"
-};
-
-let currentDrag = null;
-let latestPayload = null;
 let performanceSamples = [];
 let performanceFailures = 0;
 let performanceStatus = "normal";
 let performanceMonitorId = null;
 let lastTraceSignature = "";
 
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function getViewportLimits(badge) {
-  const rect = badge.getBoundingClientRect();
-  const maxX = Math.max(BADGE_MARGIN, window.innerWidth - rect.width - BADGE_MARGIN);
-  const maxY = Math.max(BADGE_MARGIN, window.innerHeight - rect.height - BADGE_MARGIN);
-  return { maxX, maxY };
-}
-
-function applyBadgeCoordinates(badge, coordinates) {
-  const xRaw = Number(coordinates?.x);
-  const yRaw = Number(coordinates?.y);
-  const xValid = Number.isFinite(xRaw);
-  const yValid = Number.isFinite(yRaw);
-  if (!xValid || !yValid) {
-    return;
-  }
-
-  const { maxX, maxY } = getViewportLimits(badge);
-  const x = clamp(Math.round(xRaw), BADGE_MARGIN, maxX);
-  const y = clamp(Math.round(yRaw), BADGE_MARGIN, maxY);
-
-  badge.style.top = `${y}px`;
-  badge.style.left = `${x}px`;
-  badge.style.right = "";
-  badge.style.bottom = "";
-}
-
-async function persistBadgeCoordinates(x, y) {
-  const payload = {
-    badgeCoordinates: {
-      x: Math.round(x),
-      y: Math.round(y)
-    }
-  };
-
-  await chrome.storage.local.set(payload);
-}
-
-function startDrag(event, badge) {
-  if (event.button !== 0) {
-    return;
-  }
-
-  const rect = badge.getBoundingClientRect();
-  currentDrag = {
-    pointerOffsetX: event.clientX - rect.left,
-    pointerOffsetY: event.clientY - rect.top
-  };
-
-  badge.style.cursor = "grabbing";
-  event.preventDefault();
-}
-
-async function updateDrag(event, badge) {
-  if (!currentDrag) {
-    return;
-  }
-
-  const { maxX, maxY } = getViewportLimits(badge);
-  const x = clamp(event.clientX - currentDrag.pointerOffsetX, BADGE_MARGIN, maxX);
-  const y = clamp(event.clientY - currentDrag.pointerOffsetY, BADGE_MARGIN, maxY);
-
-  badge.style.top = `${Math.round(y)}px`;
-  badge.style.left = `${Math.round(x)}px`;
-  badge.style.right = "";
-  badge.style.bottom = "";
-}
-
-async function finishDrag(badge) {
-  if (!currentDrag) {
-    return;
-  }
-
-  currentDrag = null;
-  badge.style.cursor = "grab";
-
-  const rect = badge.getBoundingClientRect();
-  await persistBadgeCoordinates(rect.left, rect.top);
-}
-
-function setupBadgeDrag(badge) {
-  if (badge.dataset.dragReady === "true") {
-    return;
-  }
-
-  badge.dataset.dragReady = "true";
-  badge.style.cursor = "grab";
-
-  badge.addEventListener("mousedown", (event) => {
-    startDrag(event, badge);
-  });
-
-  window.addEventListener("mousemove", (event) => {
-    void updateDrag(event, badge);
-  });
-
-  window.addEventListener("mouseup", () => {
-    void finishDrag(badge);
-  });
-
-  window.addEventListener("blur", () => {
-    void finishDrag(badge);
-  });
+function isTasyHostname(hostname) {
+  return typeof hostname === "string" && hostname.toLowerCase().includes("tasy");
 }
 
 function pushPerformanceSample(latencyMs) {
@@ -256,26 +142,6 @@ async function tracePerformanceCycle(latencyMs, status) {
   }
 }
 
-function applyPerformanceVisualState(badge) {
-  const color = BADGE_STATUS_COLORS[performanceStatus] || BADGE_STATUS_COLORS.normal;
-  badge.style.background = color;
-
-  if (performanceStatus === "slow") {
-    badge.style.boxShadow = "0 2px 10px rgba(199, 58, 58, 0.55)";
-    badge.title = "Desempenho lento detectado";
-    return;
-  }
-
-  if (performanceStatus === "oscillating") {
-    badge.style.boxShadow = "0 2px 10px rgba(216, 135, 0, 0.55)";
-    badge.title = "Oscilação de desempenho detectada";
-    return;
-  }
-
-  badge.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.25)";
-  badge.title = "Desempenho normal";
-}
-
 async function measureLatencyProbe() {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), PERFORMANCE_TIMEOUT_MS);
@@ -299,10 +165,6 @@ async function measureLatencyProbe() {
 }
 
 async function runPerformanceCycle() {
-  if (!latestPayload?.enabled) {
-    return;
-  }
-
   const latency = await measureLatencyProbe();
   if (typeof latency === "number" && Number.isFinite(latency)) {
     pushPerformanceSample(latency);
@@ -313,22 +175,6 @@ async function runPerformanceCycle() {
 
   performanceStatus = classifyPerformanceStatus();
   await tracePerformanceCycle(latency, performanceStatus);
-  const badge = document.getElementById(BADGE_ID);
-  if (badge) {
-    applyPerformanceVisualState(badge);
-  }
-}
-
-function stopPerformanceMonitor() {
-  if (performanceMonitorId !== null) {
-    window.clearInterval(performanceMonitorId);
-    performanceMonitorId = null;
-  }
-
-  performanceSamples = [];
-  performanceFailures = 0;
-  performanceStatus = "normal";
-  lastTraceSignature = "";
 }
 
 function startPerformanceMonitor() {
@@ -342,111 +188,99 @@ function startPerformanceMonitor() {
   }, PERFORMANCE_POLL_INTERVAL_MS);
 }
 
-function applyBadgePosition(badge, position) {
-  badge.style.top = "";
-  badge.style.right = "";
-  badge.style.bottom = "";
-  badge.style.left = "";
-
-  switch (position) {
-    case "top-left":
-      badge.style.top = "14px";
-      badge.style.left = "14px";
-      break;
-    case "bottom-left":
-      badge.style.bottom = "14px";
-      badge.style.left = "14px";
-      break;
-    case "bottom-right":
-      badge.style.bottom = "14px";
-      badge.style.right = "14px";
-      break;
-    case "top-right":
-    default:
-      badge.style.top = "14px";
-      badge.style.right = "14px";
-      break;
-  }
-}
-
-function ensureBadgeElement() {
-  let badge = document.getElementById(BADGE_ID);
-  if (badge) {
-    return badge;
-  }
-
-  badge = document.createElement("div");
-  badge.id = BADGE_ID;
-  badge.style.position = "fixed";
-  badge.style.zIndex = "2147483647";
-  badge.style.background = "#0b5cab";
-  badge.style.color = "#ffffff";
-  badge.style.fontFamily = "Segoe UI, Arial, sans-serif";
-  badge.style.fontSize = "12px";
-  badge.style.fontWeight = "700";
-  badge.style.padding = "6px 10px";
-  badge.style.borderRadius = "8px";
-  badge.style.boxShadow = "0 2px 8px rgba(0, 0, 0, 0.25)";
-  badge.style.pointerEvents = "auto";
-  badge.style.userSelect = "none";
-  document.documentElement.appendChild(badge);
-  setupBadgeDrag(badge);
-  return badge;
-}
-
-function removeBadgeElement() {
-  stopPerformanceMonitor();
-  const badge = document.getElementById(BADGE_ID);
-  if (badge) {
-    badge.remove();
-  }
-}
-
-function renderBadge(payload) {
-  const enabled = Boolean(payload?.enabled);
-  latestPayload = payload || {};
-
-  if (!enabled) {
-    removeBadgeElement();
-    return;
-  }
-
-  const serverId = payload?.serverId && payload.serverId !== "-" ? payload.serverId : "N/D";
-  const badge = ensureBadgeElement();
-  if (payload?.badgeCoordinates && Number.isFinite(Number(payload.badgeCoordinates.x)) && Number.isFinite(Number(payload.badgeCoordinates.y))) {
-    applyBadgeCoordinates(badge, payload.badgeCoordinates);
-  } else {
-    applyBadgePosition(badge, payload?.badgePosition || "bottom-right");
-  }
-  badge.textContent = `SRV ${serverId}`;
-  applyPerformanceVisualState(badge);
+if (isTasyHostname(window.location.hostname)) {
   startPerformanceMonitor();
 }
 
-async function requestInitialState() {
-  try {
-    const payload = await chrome.runtime.sendMessage({
-      type: "TASY_GET_SERVER_BADGE_STATE"
-    });
-    renderBadge(payload);
-  } catch (_error) {
-  }
-}
+// --- Tasy metadata bridge ---------------------------------------------------
+// Relays chrome.storage options/recent-features to the page-context script
+// (metadata-injected.js, world: "MAIN") since only this isolated script has
+// access to chrome.storage/chrome.runtime.
 
-chrome.runtime.onMessage.addListener((message) => {
-  if (!message || typeof message !== "object") {
+const METADATA_MSG_MARK = "__tasyExt";
+const METADATA_OPTION_KEYS = [
+  "showFieldDetails",
+  "showGridDetails",
+  "showPanelDetails",
+  "showRecentFeatures",
+  "showUserLocale",
+  "inspectMode"
+];
+const RECENT_FEATURES_KEY = "recentFeatures";
+const RECENT_FEATURES_MAX = 20;
+
+async function sendMetadataOptions() {
+  if (!isTasyHostname(window.location.hostname)) {
     return;
   }
 
-  if (message.type === "TASY_SERVER_BADGE_UPDATE") {
-    renderBadge(message.payload || {});
+  const data = await chrome.storage.local.get([...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY]);
+  const options = {};
+  METADATA_OPTION_KEYS.forEach((key) => {
+    options[key] = Boolean(data[key]);
+  });
+  options.recentFeatures = Array.isArray(data[RECENT_FEATURES_KEY]) ? data[RECENT_FEATURES_KEY] : [];
+
+  window.postMessage({ [METADATA_MSG_MARK]: true, type: "OPTIONS", options }, "*");
+}
+
+async function addRecentFeature(feature) {
+  if (!feature || feature.code === undefined) {
+    return;
+  }
+
+  const data = await chrome.storage.local.get([RECENT_FEATURES_KEY]);
+  const current = Array.isArray(data[RECENT_FEATURES_KEY]) ? data[RECENT_FEATURES_KEY] : [];
+  const withoutDuplicate = current.filter((item) => item.code !== feature.code);
+  const updated = [feature, ...withoutDuplicate].slice(0, RECENT_FEATURES_MAX);
+  await chrome.storage.local.set({ [RECENT_FEATURES_KEY]: updated });
+}
+
+async function removeRecentFeature(feature) {
+  if (!feature || feature.code === undefined) {
+    return;
+  }
+
+  const data = await chrome.storage.local.get([RECENT_FEATURES_KEY]);
+  const current = Array.isArray(data[RECENT_FEATURES_KEY]) ? data[RECENT_FEATURES_KEY] : [];
+  const updated = current.filter((item) => item.code !== feature.code);
+  await chrome.storage.local.set({ [RECENT_FEATURES_KEY]: updated });
+}
+
+window.addEventListener("message", (event) => {
+  if (event.source !== window) {
+    return;
+  }
+
+  const data = event.data;
+  if (!data || data[METADATA_MSG_MARK] !== true) {
+    return;
+  }
+
+  if (data.type === "REQUEST_OPTIONS") {
+    void sendMetadataOptions();
+    return;
+  }
+
+  if (data.type === "FEATURE_OPENED") {
+    void addRecentFeature(data.feature);
+    return;
+  }
+
+  if (data.type === "FEATURE_REMOVED") {
+    void removeRecentFeature(data.feature);
   }
 });
 
-void requestInitialState();
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== "local") {
+    return;
+  }
 
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) {
-    void requestInitialState();
+  const relevantKeys = [...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY];
+  if (relevantKeys.some((key) => key in changes)) {
+    void sendMetadataOptions();
   }
 });
+
+void sendMetadataOptions();

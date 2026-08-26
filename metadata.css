@@ -1,0 +1,264 @@
+/* Tasy metadata overlays - neutral dev-tool palette
+   Blue tones = small technical detail annotations (fields, grid columns,
+   panel info). Kept understated so it doesn't compete with TASY's own UI. */
+
+.tex-copy-me {
+  cursor: pointer;
+}
+
+.tex-fellow-label {
+  display: inline-block;
+  padding: 3px 5px;
+  border-radius: 3px;
+  background-color: #0284C7;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: "Consolas", "Courier New", monospace !important;
+  line-height: 12px;
+}
+
+.tex-field-attr-label {
+  background-color: #0284C7;
+}
+
+.tex-grid-label {
+  background-color: #38BDF8;
+}
+
+.tex-panel-item {
+  background-color: #075985;
+}
+
+.tex-json-number { color: #7C3AED; }
+.tex-json-key { color: #075985; }
+.tex-json-string { color: #059669; }
+.tex-json-boolean { color: #0284C7; }
+.tex-json-null { color: #999999; }
+
+.tex-form-mdetail > :first-child {
+  padding-top: 12px;
+}
+
+.tex-field-attr-container {
+  position: absolute;
+  top: -11px;
+  display: flex;
+  gap: 3px;
+}
+
+.tex-field-attr-container ~ .w-attr-container__content--inline {
+  margin-top: 0;
+}
+
+.tex-slick-pane-top {
+  top: 51px !important;
+}
+
+.tex-slick-header-column.tex-slick-header-column.tex-slick-header-column {
+  height: 48px !important;
+}
+
+.tex-grid-label {
+  position: absolute;
+  top: 25px;
+  left: 6px;
+}
+
+/* --- Recentes ------------------------------------------------------------ */
+
+.w-launcher__apps {
+  position: relative;
+}
+
+.tex-recent-features-container {
+  flex: 1;
+  flex-direction: column;
+  display: flex;
+  position: absolute;
+  width: 210px;
+  top: -34px;
+  right: 100%;
+  bottom: 0;
+  transform: translateX(-118px);
+}
+
+.tex-recent-features-title {
+  display: inline-block;
+  margin-bottom: 24px;
+  width: 130px;
+  padding-bottom: 4px;
+  border-bottom: 4px solid #0284C7;
+  color: #ffffff;
+  font-family: "Segoe UI Semibold", "Segoe UI", Arial, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tex-recent-features-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.tex-recent-features-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tex-recent-features-item {
+  cursor: pointer;
+  position: relative;
+  display: block;
+  margin-bottom: 0.75em;
+  padding: 0.9em 0.5em;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid rgba(241, 245, 249, 0.5);
+  background-color: rgba(241, 245, 249, 0.08);
+  color: #F1F5F9;
+  font-size: 12px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  line-height: 17px;
+  text-align: center;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.tex-recent-features-item:hover {
+  border-color: #38BDF8;
+  background-color: rgba(56, 189, 248, 0.15);
+}
+
+.tex-recent-features-item.disabled {
+  cursor: default;
+  color: rgba(241, 245, 249, 0.5);
+  border-color: rgba(241, 245, 249, 0.3);
+  background-color: transparent;
+}
+
+.tex-recent-features-item .close {
+  position: absolute;
+  display: none;
+  top: 2px;
+  right: 4px;
+  padding: 2px;
+  width: 1.2em;
+  height: 1.2em;
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.tex-recent-features-item:hover .close {
+  display: block;
+  cursor: pointer;
+}
+
+/* --- Panel details --------------------------------------------------------- */
+
+.tex-panel-info-container {
+  position: absolute;
+  display: flex;
+  gap: 4px;
+  top: 5px;
+  left: 5px;
+}
+
+/* --- Inspect mode ----------------------------------------------------------- */
+
+.tex-inspect-button {
+  cursor: pointer;
+  z-index: 2147483000;
+  position: fixed;
+  top: 4px;
+  left: 50%;
+  padding: 8px 12px;
+  background-color: rgba(2, 132, 199, 0.85);
+  border: 1px solid #F1F5F9;
+  border-radius: 6px;
+  color: #F1F5F9;
+  font-size: 13px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-weight: 600;
+  transform: translateX(-50%);
+}
+
+.tex-inspect-button:hover {
+  background-color: #0284C7;
+}
+
+.tex-inspect-button.tex-inspect-button-cancel {
+  background-color: #555555;
+}
+
+.tex-inspect-layer {
+  position: fixed;
+  background-color: rgba(56, 189, 248, 0.25);
+  outline: 2px solid #0284C7;
+  z-index: 2147482999;
+  pointer-events: none;
+}
+
+.tex-scope-container {
+  position: fixed;
+  display: flex;
+  z-index: 2147483000;
+  flex-direction: column;
+  top: 50%;
+  left: 50%;
+  width: 60vw;
+  height: 70vh;
+  max-width: 60vw;
+  max-height: 70vh;
+  border: 1px solid rgba(241, 245, 249, 0.15);
+  border-top: 4px solid #0284C7;
+  border-radius: 8px;
+  background-color: #0F172A;
+  color: #F1F5F9;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.tex-scope-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.1);
+}
+
+.tex-scope-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.tex-scope-close {
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background-color: transparent;
+  color: #F1F5F9;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.tex-scope-content {
+  max-width: 100%;
+  width: 100%;
+  padding: 16px 18px;
+  overflow: auto;
+}
+
+.tex-scope-content pre {
+  margin: 0;
+  font-family: "Consolas", "Courier New", monospace !important;
+  font-size: 12px;
+  line-height: 1.4 !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#tex-user-locale {
+  margin-right: 6px;
+}
