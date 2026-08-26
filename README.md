@@ -1,8 +1,8 @@
 # Tasy DevTools (Chrome Extension)
 
-Extensão Chrome (Manifest V3) para desenvolvedores e times de suporte do TASY: monitora oscilações de desempenho, exibe metadados técnicos das telas (nos moldes da Tasy Metadata Extension) e permite trocar o cookie de servidor quando aplicável ao seu ambiente.
+Extensão Chrome (Manifest V3) para desenvolvedores e times de suporte do TASY: monitora oscilações de desempenho e exibe metadados técnicos das telas (nos moldes da Tasy Metadata Extension).
 
-Funciona em qualquer ambiente TASY cujo domínio contenha "tasy" no hostname (ex.: `tasy.suaempresa.com.br`, `tasyhml.suaempresa.com.br`, `dev.tasy.suaempresa.com.br`).
+Funciona em qualquer ambiente TASY cujo domínio contenha "tasy" no hostname (ex.: `tasy.suaempresa.com.br`, `tasyhml.suaempresa.com.br`, `dev.tasy.suaempresa.com.br`) — não é necessário configurar nada, ela ativa suas funcionalidades automaticamente nesses domínios.
 
 ## O que faz
 
@@ -26,12 +26,6 @@ Cada opção liga/desliga independentemente pelo popup, em **Metadados TASY**:
 
 Clicar em qualquer badge/label copia o valor para a área de transferência. Os botões **Limpar recentes** e **Recarregar estilos** ficam junto das opções de metadados.
 
-### Cookie de servidor (opcional)
-
-- Permite configurar domínio fixo (ou usar a aba ativa) e ler/escrever o cookie `TASYAPPSERVER_TASY`.
-- Só é útil em ambientes que efetivamente usam esse cookie para fixar sessão em um servidor específico — algumas instalações mais recentes do TASY não o utilizam mais; nesse caso o popup indica "cookie não encontrado" e a troca de servidor não se aplica ao seu ambiente.
-- Ao salvar o cookie, executa recarga forçada antes e depois da troca (equivalente a `Ctrl+Shift+R` duas vezes).
-
 ## Pré-requisitos
 
 - Google Chrome (ou Chromium compatível com MV3).
@@ -46,16 +40,15 @@ Clicar em qualquer badge/label copia o valor para a área de transferência. Os 
 
 ## Como usar
 
-1. Clique no ícone da extensão.
-2. Em **Domínio configurado**, escolha **Usar aba ativa** ou **Outro domínio...** para digitar o domínio do seu ambiente TASY.
-3. Clique em **Salvar domínio**.
-4. Marque as opções desejadas em **Metadados TASY**.
-5. (Opcional) Se seu ambiente usar o cookie `TASYAPPSERVER_TASY`, edite **Novo valor** e clique em **Salvar**.
+1. Abra a tela do TASY que quer inspecionar.
+2. Clique no ícone da extensão.
+3. Marque as opções desejadas em **Metadados TASY**.
+4. Acompanhe o log de performance em **Monitoramento de desempenho**.
 
 ## Arquivos
 
-- `manifest.json`: permissões (`cookies`, `tabs`, `storage`, `scripting`), ícone da extensão, `background` e `content_scripts`.
-- `popup.html` / `popup.css` / `popup.js`: interface do popup (domínio/cookie e opções de metadados).
+- `manifest.json`: permissões (`tabs`, `storage`, `scripting`), ícone da extensão, `background` e `content_scripts`.
+- `popup.html` / `popup.css` / `popup.js`: interface do popup (opções de metadados e tracer).
 - `background.js`: tracer de performance e recarga de estilos.
 - `content.js`: monitor de latência e ponte de `chrome.storage` com o script de metadados.
 - `metadata-injected.js`: roda no contexto da própria página TASY (`world: "MAIN"`) para ler o AngularJS/DOM e renderizar os overlays de metadados.
@@ -65,15 +58,14 @@ Clicar em qualquer badge/label copia o valor para a área de transferência. Os 
 
 Este repositório está pronto para ser carregado como extensão descompactada, mas publicá-lo na Chrome Web Store exige algumas etapas que só o dono da conta pode fazer:
 
-1. Criar uma conta de desenvolvedor em https://chrome.google.com/webstore/devconsole (taxa única de US$5).
-2. Gerar um pacote `.zip` da pasta do projeto (sem a pasta `.git`).
+1. Criar uma conta de desenvolvedor em https://chrome.google.com/webstore/devconsole (taxa única de US$5, caso ainda não tenha).
+2. Gerar um pacote `.zip` da pasta do projeto (sem a pasta `.git`, sem `PRIVACY.md`/`README.md`).
 3. Preencher a ficha da loja: nome, descrição curta/longa, categoria, e pelo menos uma screenshot (1280×800 ou 640×400).
-4. Publicar/hospedar o arquivo `PRIVACY.md` deste repositório (ex.: GitHub Pages ou raw do GitHub) e informar a URL na ficha da loja — obrigatório porque a extensão pede permissão de `cookies` e acesso a todos os sites.
-5. Justificar, no formulário de permissões da Web Store, por que cada permissão (`cookies`, `tabs`, `storage`, `scripting`, host permissions) é necessária (veja `PRIVACY.md` para o texto-base).
+4. Publicar/hospedar o arquivo `PRIVACY.md` deste repositório (ex.: GitHub Pages ou raw do GitHub) e informar a URL na ficha da loja — obrigatório porque a extensão pede acesso a todos os sites.
+5. Justificar, no formulário de permissões da Web Store, por que cada permissão (`tabs`, `storage`, `scripting`, host permissions) é necessária (veja `PRIVACY.md` para o texto-base).
 6. Submeter para revisão. Extensões com permissões amplas (`http://*/*`, `https://*/*`) costumam levar mais tempo na revisão do Google.
 
 ## Observações
 
-- Se usar **Usar aba ativa** fora de uma aba HTTP/HTTPS, a extensão mostra erro de contexto.
-- Se o cookie não existir para a URL/path atual, a extensão informa no status.
-- Após salvar o cookie, recarregue a página do TASY para aplicar o novo valor de sessão, se necessário.
+- Se algum dos overlays de metadados não aparecer, confira se a opção correspondente está marcada no popup.
+- Se o painel "Recentes" estiver vazio, abra pelo menos uma tela pela grade de ícones do TASY para começar a popular o histórico.
