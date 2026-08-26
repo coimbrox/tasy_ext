@@ -123,6 +123,34 @@ button:hover {
   border-color: var(--accent);
 }
 
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+button.primary:hover {
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+}
+
+button.primary.recording {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+button.primary.recording:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.trace-hint {
+  margin: 0 0 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(15, 23, 42, 0.65);
+}
+
 .status {
   margin: 10px 14px 0;
   font-size: 12px;
@@ -156,6 +184,10 @@ button:hover {
 
   .checkbox-label {
     color: rgba(248, 250, 252, 0.85);
+  }
+
+  .trace-hint {
+    color: rgba(248, 250, 252, 0.65);
   }
 
   .section-title {

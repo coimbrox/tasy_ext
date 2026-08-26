@@ -3,9 +3,10 @@ const TRACE_MAX_ENTRIES = 500;
 
 function normalizeTraceEvent(event, senderTab) {
   const safeEvent = typeof event === "object" && event ? event : {};
-  const kind = safeEvent.kind === "request" ? "request" : "probe";
+  const kind = ["request", "navigation"].includes(safeEvent.kind) ? safeEvent.kind : "probe";
   return {
     kind,
+    label: typeof safeEvent.label === "string" ? safeEvent.label : null,
     timestamp: typeof safeEvent.timestamp === "string" ? safeEvent.timestamp : new Date().toISOString(),
     status: typeof safeEvent.status === "string" ? safeEvent.status : "unknown",
     reason: typeof safeEvent.reason === "string" ? safeEvent.reason : "unspecified",
@@ -43,10 +44,6 @@ async function getPerformanceTraceLog(limit = 120) {
   return current.slice(-normalizedLimit);
 }
 
-async function clearPerformanceTraceLog() {
-  await chrome.storage.local.set({ [TRACE_STORAGE_KEY]: [] });
-}
-
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || typeof message !== "object") {
     return;
@@ -64,14 +61,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     (async () => {
       const log = await getPerformanceTraceLog(message.limit);
       sendResponse({ ok: true, log });
-    })();
-    return true;
-  }
-
-  if (message.type === "TASY_PERF_TRACE_CLEAR") {
-    (async () => {
-      await clearPerformanceTraceLog();
-      sendResponse({ ok: true });
     })();
     return true;
   }

@@ -6,12 +6,19 @@ Funciona em qualquer ambiente TASY cujo domínio contenha "tasy" no hostname (ex
 
 ## O que faz
 
-### Monitoramento de desempenho e trace de processo
+### Trace de processo
 
-- Faz uma sondagem de latência periódica (a cada ~8s) contra a própria origem da aba TASY e classifica o estado como normal, oscilando ou lento, com base em média, pico e jitter das últimas amostras.
-- Registra também cada requisição real (fetch/XHR) que a página TASY faz — método, caminho, status HTTP e duração — permitindo montar o trace completo de um processo: clique em **Limpar log**, execute a ação no TASY (ex.: criar um usuário) e depois **Copiar log** para obter todas as chamadas de backend feitas durante aquele processo, na ordem em que ocorreram.
-- Mantém um log local (`Tracer de performance`) com status, motivo (ex.: `high_average_latency`, `extreme_jitter`, `probe_timeout_or_network_error`) e métricas de cada evento relevante.
-- No popup, use **Copiar log** para levar o histórico da aba ativa e **Limpar log** para zerar a coleta.
+No popup, em **Trace de processo**, um único botão liga e desliga a gravação:
+
+- **Ativar trace**: zera o log e começa a registrar, em ordem cronológica, cada tela aberta no TASY e cada requisição real (fetch/XHR) feita — método, caminho, status HTTP e duração. Também faz uma sondagem de latência periódica (~8s) para detectar oscilação/lentidão de rede durante a gravação.
+- Execute normalmente o processo que quer documentar (ex.: criar um usuário).
+- **Desativar trace**: para a gravação e copia automaticamente para a área de transferência um resumo legível de tudo que aconteceu na aba ativa, por exemplo:
+  ```
+  [14:32:10] 🖥️ Tela aberta: Cadastro de Usuários
+  [14:32:15] → POST /TasyAppServer/resources/service/WUser/save (200, 340ms)
+  [14:32:16] ⚠️ oscillating — extreme_jitter (latência: 1850ms)
+  ```
+  Pronto para colar direto numa instrução de processo ou num chamado de suporte.
 
 ### Metadados TASY
 

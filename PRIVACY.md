@@ -8,16 +8,15 @@ Tasy DevTools é uma extensão para Google Chrome voltada a desenvolvedores e ti
 
 - A extensão **não envia nenhum dado para servidores externos**. Nenhuma informação coletada é transmitida para o desenvolvedor da extensão ou para terceiros.
 - Todo o processamento acontece localmente, no navegador do usuário.
-- Todos os dados que a extensão armazena ficam em `chrome.storage.local`, isolados no seu próprio perfil do Chrome, e podem ser apagados a qualquer momento removendo a extensão ou usando os botões "Limpar recentes" / "Limpar log" no popup.
+- Todos os dados que a extensão armazena ficam em `chrome.storage.local`, isolados no seu próprio perfil do Chrome, e podem ser apagados a qualquer momento removendo a extensão, usando o botão "Limpar recentes" ou ativando/desativando o trace de processo no popup.
 
 ## Dados acessados e por quê
 
 | Dado | Por quê | Onde fica |
 |---|---|---|
-| URL e tempo de resposta de uma sondagem HTTP (`/favicon.ico?__tasy_probe=...`) contra a própria aba TASY | Medir latência/oscilação de rede para o log de performance | `chrome.storage.local` (campo `performanceTraceLog`), local ao navegador |
-| Método, caminho da URL, status HTTP e duração de cada requisição real feita pela página TASY (fetch/XHR) | Montar o "trace" do processo que o usuário executou (ex.: todas as chamadas feitas ao criar um usuário), para diagnóstico de lentidão | `chrome.storage.local` (campo `performanceTraceLog`), local ao navegador; não inclui corpo da requisição/resposta |
+| Nome da tela/funcionalidade aberta, URL e tempo de resposta de uma sondagem HTTP (`/favicon.ico?__tasy_probe=...`), e método/caminho/status/duração de cada requisição real (fetch/XHR) feita pela página TASY | Só enquanto o usuário ativa manualmente o "Trace de processo" no popup: monta um resumo cronológico do que foi feito (telas abertas, chamadas de backend, oscilações de rede) para diagnóstico ou documentação de um processo | `chrome.storage.local` (campo `performanceTraceLog`) enquanto o trace está ativo; ao desativar, o resumo é copiado para a área de transferência e o log volta a ficar vazio na próxima ativação. Não inclui corpo da requisição/resposta |
 | Nomes técnicos de campos, colunas de grid, código/tabela de painéis e itens de menu recentes, lidos do DOM/AngularJS da página TASY | Exibir os overlays de metadados e a lista de "Recentes" | `chrome.storage.local` (`recentFeatures`) e repassados via mensagens internas da extensão; nunca saem do navegador |
-| Configurações da extensão (quais overlays estão ativos) | Lembrar as preferências do usuário entre sessões | `chrome.storage.local` |
+| Configurações da extensão (quais overlays estão ativos, se o trace está ligado) | Lembrar as preferências do usuário entre sessões | `chrome.storage.local` |
 
 Nenhum desses dados inclui, por si só, informações de pacientes ou dados de saúde — a extensão não lê o conteúdo clínico das telas do TASY, apenas nomes técnicos de campos/colunas e metadados estruturais das telas, além de métricas de latência de rede.
 

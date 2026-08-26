@@ -1,12 +1,14 @@
 const PERFORMANCE_SAMPLE_LIMIT = 8;
 const PERFORMANCE_POLL_INTERVAL_MS = 8000;
 const PERFORMANCE_TIMEOUT_MS = 4500;
+const TRACE_ACTIVE_KEY = "traceActive";
 
 let performanceSamples = [];
 let performanceFailures = 0;
 let performanceStatus = "normal";
 let performanceMonitorId = null;
 let lastTraceSignature = "";
+let traceActive = false;
 
 function isTasyHostname(hostname) {
   return typeof hostname === "string" && hostname.toLowerCase().includes("tasy");
@@ -107,6 +109,10 @@ function inferPerformanceReason(status, latencyMs, metrics) {
 }
 
 async function emitPerformanceTrace(event) {
+  if (!traceActive) {
+    return;
+  }
+
   try {
     await chrome.runtime.sendMessage({
       type: "TASY_PERF_TRACE_EVENT",
@@ -189,9 +195,38 @@ function startPerformanceMonitor() {
   }, PERFORMANCE_POLL_INTERVAL_MS);
 }
 
-if (isTasyHostname(window.location.hostname)) {
-  startPerformanceMonitor();
+function stopPerformanceMonitor() {
+  if (performanceMonitorId !== null) {
+    window.clearInterval(performanceMonitorId);
+    performanceMonitorId = null;
+  }
+
+  performanceSamples = [];
+  performanceFailures = 0;
+  performanceStatus = "normal";
+  lastTraceSignature = "";
 }
+
+async function syncTraceActiveState() {
+  if (!isTasyHostname(window.location.hostname)) {
+    return;
+  }
+
+  const data = await chrome.storage.local.get([TRACE_ACTIVE_KEY]);
+  const active = Boolean(data[TRACE_ACTIVE_KEY]);
+  if (active === traceActive) {
+    return;
+  }
+
+  traceActive = active;
+  if (traceActive) {
+    startPerformanceMonitor();
+  } else {
+    stopPerformanceMonitor();
+  }
+}
+
+void syncTraceActiveState();
 
 // --- Tasy metadata bridge ---------------------------------------------------
 // Relays chrome.storage options/recent-features to the page-context script
@@ -266,6 +301,13 @@ window.addEventListener("message", (event) => {
 
   if (data.type === "FEATURE_OPENED") {
     void addRecentFeature(data.feature);
+    void emitPerformanceTrace({
+      kind: "navigation",
+      timestamp: new Date().toISOString(),
+      pageUrl: window.location.href,
+      origin: window.location.origin,
+      label: data.feature?.caption || data.feature?.name || ""
+    });
     return;
   }
 
@@ -293,6 +335,10 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   const relevantKeys = [...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY];
   if (relevantKeys.some((key) => key in changes)) {
     void sendMetadataOptions();
+  }
+
+  if (TRACE_ACTIVE_KEY in changes) {
+    void syncTraceActiveState();
   }
 });
 

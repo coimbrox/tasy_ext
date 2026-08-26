@@ -7,13 +7,14 @@ const METADATA_OPTION_KEYS = [
   "inspectMode",
   "showReportLayout"
 ];
+const TRACE_ACTIVE_KEY = "traceActive";
+
 const metadataCheckboxes = Object.fromEntries(
   METADATA_OPTION_KEYS.map((key) => [key, document.getElementById(key)])
 );
 const clearRecentFeaturesBtn = document.getElementById("clearRecentFeaturesBtn");
 const reloadStylesheetsBtn = document.getElementById("reloadStylesheetsBtn");
-const copyTraceBtn = document.getElementById("copyTraceBtn");
-const clearTraceBtn = document.getElementById("clearTraceBtn");
+const toggleTraceBtn = document.getElementById("toggleTraceBtn");
 const statusEl = document.getElementById("status");
 
 function setStatus(message, type = "") {
@@ -26,7 +27,7 @@ async function getActiveTab() {
   return tabs[0] || null;
 }
 
-async function getPerformanceTraceLog(limit = 120) {
+async function getPerformanceTraceLog(limit = 500) {
   const response = await chrome.runtime.sendMessage({
     type: "TASY_PERF_TRACE_GET",
     limit
@@ -37,12 +38,6 @@ async function getPerformanceTraceLog(limit = 120) {
   }
 
   return response.log;
-}
-
-async function clearPerformanceTraceLog() {
-  await chrome.runtime.sendMessage({
-    type: "TASY_PERF_TRACE_CLEAR"
-  });
 }
 
 async function loadMetadataOptions() {
@@ -83,8 +78,65 @@ reloadStylesheetsBtn.addEventListener("click", async () => {
   }
 });
 
-copyTraceBtn.addEventListener("click", async () => {
+function formatTime(isoTimestamp) {
+  try {
+    return new Date(isoTimestamp).toLocaleTimeString("pt-BR");
+  } catch (_error) {
+    return "?";
+  }
+}
+
+function formatTraceEntry(entry) {
+  const time = formatTime(entry.timestamp);
+  if (entry.kind === "navigation") {
+    return entry.label ? `[${time}] 🖥️ Tela aberta: ${entry.label}` : null;
+  }
+
+  if (entry.kind === "request") {
+    const status = entry.httpStatus ?? "erro";
+    return `[${time}] → ${entry.method || "GET"} ${entry.url || ""} (${status}, ${entry.durationMs ?? "?"}ms)`;
+  }
+
+  if (entry.kind === "probe" && entry.status && entry.status !== "normal") {
+    return `[${time}] ⚠️ ${entry.status} — ${entry.reason} (latência: ${entry.latencyMs ?? "?"}ms)`;
+  }
+
+  return null;
+}
+
+function buildReadableTrace(entries) {
+  const lines = entries.map(formatTraceEntry).filter(Boolean);
+  if (lines.length === 0) {
+    return "";
+  }
+  return lines.join("\n");
+}
+
+function setTraceButtonState(active) {
+  toggleTraceBtn.textContent = active ? "Desativar trace" : "Ativar trace";
+  toggleTraceBtn.classList.toggle("recording", active);
+}
+
+async function loadTraceState() {
+  const data = await chrome.storage.local.get([TRACE_ACTIVE_KEY]);
+  setTraceButtonState(Boolean(data[TRACE_ACTIVE_KEY]));
+}
+
+toggleTraceBtn.addEventListener("click", async () => {
+  const data = await chrome.storage.local.get([TRACE_ACTIVE_KEY]);
+  const isActive = Boolean(data[TRACE_ACTIVE_KEY]);
+
+  if (!isActive) {
+    await chrome.storage.local.set({ [TRACE_ACTIVE_KEY]: true, performanceTraceLog: [] });
+    setTraceButtonState(true);
+    setStatus("Trace ativado. Execute o processo no TASY normalmente.", "ok");
+    return;
+  }
+
+  await chrome.storage.local.set({ [TRACE_ACTIVE_KEY]: false });
+  setTraceButtonState(false);
   setStatus("Coletando trace...");
+
   try {
     const activeTab = await getActiveTab();
     if (!activeTab || typeof activeTab.id !== "number") {
@@ -92,35 +144,31 @@ copyTraceBtn.addEventListener("click", async () => {
       return;
     }
 
-    const log = await getPerformanceTraceLog(300);
+    const log = await getPerformanceTraceLog(500);
     const activeTabLog = log.filter((entry) => Number(entry?.tabId) === Number(activeTab.id));
 
     if (activeTabLog.length === 0) {
-      setStatus("Ainda não há eventos de trace para a aba ativa.", "warn");
+      setStatus("Trace desativado. Nenhum evento foi registrado.", "warn");
       return;
     }
 
-    const content = JSON.stringify(activeTabLog, null, 2);
-    await navigator.clipboard.writeText(content);
-    setStatus(`Trace da aba ativa copiado (${activeTabLog.length} evento(s)).`, "ok");
+    const readable = buildReadableTrace(activeTabLog);
+    if (!readable) {
+      setStatus("Trace desativado. Nenhum evento relevante foi registrado.", "warn");
+      return;
+    }
+
+    await navigator.clipboard.writeText(readable);
+    setStatus(`Trace copiado (${activeTabLog.length} evento(s)).`, "ok");
   } catch (error) {
     setStatus(`Falha ao copiar trace: ${error.message || String(error)}`, "error");
-  }
-});
-
-clearTraceBtn.addEventListener("click", async () => {
-  setStatus("Limpando trace...");
-  try {
-    await clearPerformanceTraceLog();
-    setStatus("Trace limpo com sucesso.", "ok");
-  } catch (error) {
-    setStatus(`Falha ao limpar trace: ${error.message || String(error)}`, "error");
   }
 });
 
 (async () => {
   try {
     await loadMetadataOptions();
+    await loadTraceState();
   } catch (error) {
     setStatus(error.message || String(error), "error");
   }
