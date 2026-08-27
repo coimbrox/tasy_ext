@@ -27,7 +27,7 @@ A extensão não lê o conteúdo clínico das telas do TASY por conta própria. 
 - **tabs**: necessária para identificar a aba ativa (usada para filtrar o registro de processo copiado e para a função "Recarregar estilos") e para capturar o screenshot de cada passo (`chrome.tabs.captureVisibleTab`) enquanto o Registrar Processo está ativo.
 - **storage**: necessária para guardar as preferências do usuário e o log de performance localmente.
 - **scripting**: necessária para a função "Recarregar estilos" (força o navegador a buscar novamente os arquivos CSS da página sem recarregá-la por completo).
-- **Acesso a todos os sites (`http://*/*`, `https://*/*`)**: a extensão precisa rodar em qualquer domínio que o usuário configure como seu ambiente TASY, que varia de empresa para empresa. Na prática, a extensão só ativa suas funcionalidades em páginas cujo hostname contenha "tasy"; em qualquer outro site ela permanece inativa.
+- **Acesso a todos os sites (`<all_urls>`)**: a extensão precisa rodar em qualquer domínio que o usuário configure como seu ambiente TASY, que varia de empresa para empresa. Na prática, a extensão só ativa suas funcionalidades em páginas cujo hostname contenha "tasy"; em qualquer outro site ela permanece inativa. O padrão `<all_urls>` (em vez de `http://*/*` + `https://*/*` separados) é exigido especificamente pela API `chrome.tabs.captureVisibleTab`, usada para o print de cada passo do Registrar Processo.
 
 ## Contato
 

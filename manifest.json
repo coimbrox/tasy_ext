@@ -18,8 +18,7 @@
     "scripting"
   ],
   "host_permissions": [
-    "http://*/*",
-    "https://*/*"
+    "<all_urls>"
   ],
   "action": {
     "default_icon": {
