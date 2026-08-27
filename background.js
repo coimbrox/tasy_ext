@@ -35,6 +35,7 @@ function normalizeTraceEvent(event, senderTab) {
 
 async function captureStepScreenshot(entryId, senderTab) {
   if (!senderTab || typeof senderTab.windowId !== "number") {
+    console.warn("captureStepScreenshot: no senderTab/windowId", senderTab);
     return;
   }
 
@@ -45,6 +46,7 @@ async function captureStepScreenshot(entryId, senderTab) {
     screenshots[entryId] = dataUrl;
     await chrome.storage.local.set({ [TRACE_SCREENSHOTS_KEY]: screenshots });
   } catch (_error) {
+    console.error("captureStepScreenshot failed:", _error);
     // Capture can fail (rate limit, tab not visible, etc) - the text entry is kept regardless.
   }
 }
