@@ -27,6 +27,10 @@ No popup, em **Registrar Processo**, um único botão liga e desliga a gravaçã
   ```
 - **Atenção**: como o registro guarda os valores digitados nos campos e um print de cada passo, revise o texto/arquivo antes de compartilhar caso o processo documentado envolva dados sensíveis (ex.: dados de paciente, inclusive de terceiros que apareçam incidentalmente na tela).
 
+### Cores por ambiente
+
+Em **Cores por ambiente**, cadastre regras como "domínio contém `hml` → laranja, rótulo Homologação". Quando o hostname da aba bate com uma regra, a extensão mostra uma borda colorida ao redor da tela e uma etiqueta arrastável — assim fica visualmente óbvio se você está em produção, homologação, desenvolvimento etc. Não depende de nenhum cookie/servidor, só do hostname da própria aba.
+
 ### Metadados TASY
 
 Cada opção liga/desliga independentemente pelo popup, em **Metadados TASY**:

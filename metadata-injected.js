@@ -1087,6 +1087,50 @@
     }
   }
 
+  // --- Environment indicator: colored border + badge per configured rule ----
+  function pickReadableTextColor(hexColor) {
+    const hex = String(hexColor).replace("#", "");
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "#0F172A" : "#FFFFFF";
+  }
+
+  class EnvironmentIndicatorRenderer extends Renderer {
+    condition() {
+      // Only reacts to setOptions (initial load / rule changes) - the
+      // hostname can't change without a real navigation, which reinjects
+      // this script anyway, so no need to watch DOM mutations here.
+      return false;
+    }
+    render({ environmentRules }) {
+      const rules = Array.isArray(environmentRules) ? environmentRules : [];
+      const hostname = window.location.hostname.toLowerCase();
+      const match = rules.find((rule) => rule.match && hostname.includes(String(rule.match).toLowerCase()));
+
+      if (!match) {
+        document.documentElement.style.outline = "";
+        document.querySelector(".tex-env-badge")?.remove();
+        return;
+      }
+
+      document.documentElement.style.outline = `4px solid ${match.color}`;
+      document.documentElement.style.outlineOffset = "-4px";
+
+      let badge = document.querySelector(".tex-env-badge");
+      if (!badge) {
+        badge = document.createElement("div");
+        badge.className = "tex-env-badge";
+        document.body.appendChild(badge);
+        makeDraggable(badge, badge);
+      }
+      badge.style.backgroundColor = match.color;
+      badge.style.color = pickReadableTextColor(match.color);
+      badge.innerText = match.label || match.match;
+    }
+  }
+
   manager.add(new FieldDetailsRenderer());
   manager.add(new GridDetailsRenderer());
   manager.add(new PanelDetailsRenderer());
@@ -1094,6 +1138,7 @@
   manager.add(new UserLocaleRenderer());
   manager.add(new InspectModeRenderer());
   manager.add(new ReportLayoutRenderer());
+  manager.add(new EnvironmentIndicatorRenderer());
 
   window.addEventListener("message", (event) => {
     if (event.source !== window) {

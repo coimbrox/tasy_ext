@@ -71,6 +71,85 @@ dictionarySearchEl.addEventListener("input", async () => {
   renderDictionaryResults(matches);
 });
 
+// --- Environment color rules ------------------------------------------------
+
+const ENVIRONMENT_RULES_KEY = "environmentRules";
+const environmentRulesListEl = document.getElementById("environmentRulesList");
+const addEnvironmentRuleBtn = document.getElementById("addEnvironmentRuleBtn");
+
+function renderEnvironmentRules(rules) {
+  environmentRulesListEl.innerHTML = "";
+  rules.forEach((rule) => {
+    const row = document.createElement("div");
+    row.className = "environment-rule-row";
+
+    const matchInput = document.createElement("input");
+    matchInput.type = "text";
+    matchInput.placeholder = "ex: hml";
+    matchInput.value = rule.match || "";
+    matchInput.className = "environment-rule-match";
+
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = rule.color || "#0284C7";
+    colorInput.className = "environment-rule-color";
+
+    const labelInput = document.createElement("input");
+    labelInput.type = "text";
+    labelInput.placeholder = "ex: Homologação";
+    labelInput.value = rule.label || "";
+    labelInput.className = "environment-rule-label";
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "environment-rule-remove";
+    removeBtn.innerText = "×";
+    removeBtn.title = "Remover regra";
+
+    const persist = async () => {
+      rule.match = matchInput.value.trim();
+      rule.color = colorInput.value;
+      rule.label = labelInput.value.trim();
+      await saveEnvironmentRules();
+    };
+
+    matchInput.addEventListener("change", persist);
+    colorInput.addEventListener("input", persist);
+    labelInput.addEventListener("change", persist);
+    removeBtn.addEventListener("click", async () => {
+      currentEnvironmentRules = currentEnvironmentRules.filter((r) => r.id !== rule.id);
+      renderEnvironmentRules(currentEnvironmentRules);
+      await chrome.storage.local.set({ [ENVIRONMENT_RULES_KEY]: currentEnvironmentRules });
+    });
+
+    row.append(matchInput, colorInput, labelInput, removeBtn);
+    environmentRulesListEl.appendChild(row);
+  });
+}
+
+let currentEnvironmentRules = [];
+
+async function saveEnvironmentRules() {
+  await chrome.storage.local.set({ [ENVIRONMENT_RULES_KEY]: currentEnvironmentRules });
+}
+
+async function loadEnvironmentRules() {
+  const data = await chrome.storage.local.get([ENVIRONMENT_RULES_KEY]);
+  currentEnvironmentRules = Array.isArray(data[ENVIRONMENT_RULES_KEY]) ? data[ENVIRONMENT_RULES_KEY] : [];
+  renderEnvironmentRules(currentEnvironmentRules);
+}
+
+addEnvironmentRuleBtn.addEventListener("click", async () => {
+  currentEnvironmentRules.push({
+    id: crypto.randomUUID(),
+    match: "",
+    color: "#0284C7",
+    label: ""
+  });
+  renderEnvironmentRules(currentEnvironmentRules);
+  await saveEnvironmentRules();
+});
+
 function setStatus(message, type = "") {
   statusEl.textContent = message;
   statusEl.className = `status ${type}`.trim();
@@ -282,6 +361,7 @@ toggleTraceBtn.addEventListener("click", async () => {
   try {
     await loadMetadataOptions();
     await loadTraceState();
+    await loadEnvironmentRules();
   } catch (error) {
     setStatus(error.message || String(error), "error");
   }

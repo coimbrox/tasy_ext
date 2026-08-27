@@ -6,6 +6,25 @@
   cursor: pointer;
 }
 
+/* --- Environment indicator --------------------------------------------- */
+
+.tex-env-badge {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147482997;
+  padding: 4px 12px;
+  border-radius: 0 0 8px 8px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: move;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
 .tex-fellow-label {
   display: inline-block;
   padding: 3px 5px;

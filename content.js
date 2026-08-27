@@ -339,18 +339,20 @@ const RECENT_FEATURES_KEY = "recentFeatures";
 const RECENT_FEATURES_MAX = 20;
 const DATA_DICTIONARY_KEY = "dataDictionary";
 const DATA_DICTIONARY_MAX_ENTRIES = 3000;
+const ENVIRONMENT_RULES_KEY = "environmentRules";
 
 async function sendMetadataOptions() {
   if (!isTasyHostname(window.location.hostname)) {
     return;
   }
 
-  const data = await chrome.storage.local.get([...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY]);
+  const data = await chrome.storage.local.get([...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY, ENVIRONMENT_RULES_KEY]);
   const options = {};
   METADATA_OPTION_KEYS.forEach((key) => {
     options[key] = Boolean(data[key]);
   });
   options.recentFeatures = Array.isArray(data[RECENT_FEATURES_KEY]) ? data[RECENT_FEATURES_KEY] : [];
+  options.environmentRules = Array.isArray(data[ENVIRONMENT_RULES_KEY]) ? data[ENVIRONMENT_RULES_KEY] : [];
 
   window.postMessage({ [METADATA_MSG_MARK]: true, type: "OPTIONS", options }, "*");
 }
@@ -462,7 +464,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     return;
   }
 
-  const relevantKeys = [...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY];
+  const relevantKeys = [...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY, ENVIRONMENT_RULES_KEY];
   if (relevantKeys.some((key) => key in changes)) {
     void sendMetadataOptions();
   }
