@@ -59,6 +59,17 @@
       }
       .feature { margin-bottom: 16px; }
       .feature:last-child { margin-bottom: 0; }
+      section ul,
+      section ol {
+        padding-left: 20px;
+        margin: 6px 0;
+      }
+      section li {
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 4px;
+      }
+      ol.steps li { margin-bottom: 6px; }
       code {
         font-family: "Consolas", "Courier New", monospace;
         background: var(--surface-2);
@@ -126,10 +137,14 @@
       <section>
         <h2>Cores por ambiente</h2>
         <p>Cadastre regras como "domínio contém <code>hml</code> → laranja, rótulo Homologação" no popup. Quando o hostname da aba bater com uma regra, a extensão mostra uma borda colorida ao redor de toda a tela e uma etiqueta arrastável com o rótulo — assim fica óbvio de relance se você está em produção, homologação, desenvolvimento ou qualquer outro ambiente que você configure. Funciona só com o hostname da própria aba, sem depender de cookie ou servidor.</p>
+
+        <h3>Mostrar o estabelecimento logado</h3>
+        <p>A caixa <strong>"Mostrar o estabelecimento logado na etiqueta"</strong> acrescenta à etiqueta o estabelecimento em que você está (matriz/filial) — que normalmente só aparece pequeno no rodapé. Fica algo como <code>Homologação · Filial 2 · nó 1114</code>. É especialmente útil em instalações multi-estabelecimento, para não gravar/alterar coisa no lugar errado. Se não houver regra de cor para o domínio, a extensão mostra uma etiqueta cinza só com o estabelecimento. O nome é lido do próprio TASY (rodapé/sessão), nada é enviado para fora.</p>
       </section>
 
       <section>
         <h2>Metadados TASY</h2>
+        <p>Cada opção abaixo liga/desliga um "overlay" — uma informação extra que a extensão desenha por cima da tela do TASY. A caixa <strong>"Ativar todos"</strong> no topo liga ou desliga as sete de uma vez (fica em traço quando só algumas estão ligadas).</p>
         <div class="feature">
           <h3>Detalhes de campo</h3>
           <p>Mostra, acima de cada campo de formulário, o nome técnico da coluna (ex.: <code>CD_RELATORIO</code>, <code>DS_TITULO</code>). Clique num badge para copiar o valor.</p>
@@ -152,7 +167,16 @@
         </div>
         <div class="feature">
           <h3>Modo inspeção</h3>
-          <p>Exibe um botão "Inspecionar" fixo na tela. Clique nele, depois clique em qualquer elemento da página para abrir uma janela com o escopo AngularJS daquele elemento — útil para investigar de onde vem um dado que não tem badge.</p>
+          <p>Exibe um botão "Inspecionar" fixo na tela. Clique nele, depois clique em qualquer elemento da página. Abre uma janela com dois blocos:</p>
+          <ul>
+            <li><strong>Contexto da função</strong> (no topo): a função aberta, o painel/view/tabela daquele componente, os <strong>parâmetros encontrados no escopo</strong> (qualquer objeto com "param" no nome, listado chave → valor) e as <strong>regras detectadas</strong> ali (cor de fundo aplicada, elemento oculto por condição, chaves de regra no escopo). Serve para responder "quais parâmetros e regras estão agindo nesta tela".</li>
+            <li><strong>Escopo AngularJS completo</strong> (abaixo): o objeto de escopo inteiro, para investigar de onde vem um dado que não tem badge.</li>
+          </ul>
+          <p>As consultas que carregam essas regras e parâmetros (<code>SQL_SQL_GET_COLOR_RULES</code>, <code>SQL_SCRIPT_PARAMETERS</code>, <code>OBTER_PARAMETROS_USUARIO</code>…) você abre no <strong>Explorador do app server</strong>.</p>
+        </div>
+        <div class="feature">
+          <h3>Waterfall de rede</h3>
+          <p>Mostra um painel fixo (arrastável, no canto inferior direito) com as <strong>últimas ~15 requisições reais</strong> que a página fez, em forma de linha do tempo: método + endereço, uma barra proporcional à duração e o tempo em ms. As lentas ficam em <span style="color:#F59E0B">laranja</span>, as que deram erro em <span style="color:#EF4444">vermelho</span>. Clique numa linha para copiar o endereço. Use para achar "qual chamada está segurando a tela"; para ver o lado servidor, abra o arquivo correspondente no Explorador do app server.</p>
         </div>
         <div class="feature">
           <h3>Layout visual (relatórios) <span class="badge">EXPERIMENTAL</span></h3>
@@ -167,13 +191,136 @@
         <p>Execute normalmente o processo que quer documentar.</p>
         <p><strong>Parar registro:</strong> encerra a gravação e automaticamente:</p>
         <ul>
+          <li>Tira um <strong>print final da tela exatamente como ela está no momento em que você para</strong> (o "resultado" do processo, que nenhum clique cobre) e adiciona como último passo — "🏁 Fim do registro";</li>
           <li>Copia para a área de transferência um resumo em texto do passo a passo;</li>
           <li>Baixa um arquivo <code>.html</code> com o mesmo passo a passo, incluindo um print da tela em cada passo — pronto para anexar num chamado de suporte.</li>
         </ul>
         <div class="example">[14:32:10] 🖥️ Tela aberta: Cadastro de Usuários
 [14:32:12] ⌨️ Preencheu "Código": 12345
-[14:32:15] 🖱️ Clicou em: Salvar</div>
+[14:32:15] 🖱️ Clicou em: Salvar
+[14:32:18] 🏁 Fim do registro — tela ao parar a captura</div>
         <div class="warning">Atenção: como o registro guarda os valores digitados nos campos, revise o texto/arquivo antes de compartilhar caso o processo envolva dados sensíveis (ex.: dados de paciente).</div>
+      </section>
+
+      <section>
+        <h2>Capturar erros</h2>
+
+        <h3>Para que serve</h3>
+        <p>Às vezes você faz algo no TASY e aparece uma tela vermelha: <em>"Houve um erro na execução da aplicação"</em>, com um texto técnico curto como "Nome de coluna inválido". Essa tela não diz <strong>o que</strong> deu errado, <strong>onde</strong>, nem <strong>por quê</strong>. Com esta opção ligada, a extensão pega esse erro e monta uma explicação em português, já com o passo a passo de como investigar — pronta para colar num chamado.</p>
+
+        <h3>Como ligar (uma vez só)</h3>
+        <ol class="steps">
+          <li>Abra o popup da extensão (ícone na barra do Chrome).</li>
+          <li>Na seção <strong>Capturar erros</strong>, marque a caixa <strong>"Capturar e explicar erros do TASY"</strong>.</li>
+          <li>Clique em <strong>Testar acesso</strong>. Se aparecer "Acesso OK", está pronto. Se aparecer "Precisa de login", abra o endereço do app server uma vez no navegador e clique em "Testar acesso" de novo.</li>
+        </ol>
+        <p>Pronto — pode fechar o popup e trabalhar normalmente. Ele continua ligado nas próximas vezes que abrir o navegador.</p>
+
+        <h3>O que acontece quando dá erro</h3>
+        <p>Assim que a tela vermelha aparece, sozinha e em segundo plano, a extensão:</p>
+        <ul>
+          <li>abre o arquivo de erro no <strong>console do app server</strong> (aquele endereço com a lista de arquivos <code>wheb_arquivo.jsp</code>) usando o seu login que já está ativo no navegador — a senha do app server nunca é digitada nem guardada;</li>
+          <li>lê a mensagem real do servidor, <strong>qual processo</strong> estava rodando (ex.: "exportar perfil"), os parâmetros (ex.: qual perfil) e <strong>em que ponto do código</strong> quebrou;</li>
+          <li>no caso do "Nome de coluna inválido" (o Oracle não diz qual coluna), busca as <strong>consultas SQL</strong> que rodaram naquele processo, com os valores reais e o nome das tabelas — para você comparar e achar a coluna;</li>
+          <li>mostra um painel na tela com tudo organizado e um botão <strong>Copiar relatório</strong>.</li>
+        </ul>
+
+        <h3>Como fica o relatório</h3>
+        <div class="example">== O QUE ACONTECEU ==
+Uma consulta SQL tentou ler uma coluna que não existe...
+
+== EM QUAL PROCESSO ==
+ação exportarPerfil — falhou em CorSis_FOAction.montaAtributosItensPront
+
+== SOBRE O QUÊ ==
+CD_PERFIL=2150, DS_PERFIL=UUE - Triagem
+
+== O QUE VERIFICAR ==
+- Tabelas envolvidas: PERFIL_ITEM_PRONT_PASTA — comparar as colunas reais
+  com o SELECT abaixo; a que faltar é a culpada.
+- Confirmar scripts de atualização aplicados (versão 5.04.1845.136).
+
+== CONSULTAS DO PROCESSO ==
+• SQL_GERAR_TAB_PRONT_QUERY_AUX   [tabelas: PERFIL_ITEM_PRONT_PASTA]
+    SELECT distinct dt_atualizacao, nm_usuario, ...
+    FROM PERFIL_ITEM_PRONT_PASTA a WHERE nr_seq_item_perfil = '1011'</div>
+
+        <h3>"Este erro já aconteceu"</h3>
+        <p>Se o mesmo erro (mesmo tipo, mesma tela, mesmo processo e mesmo parâmetro-chave, ex.: o mesmo perfil) já tiver acontecido hoje, o relatório e o painel avisam: <em>"⚠ Este erro já aconteceu: 3× hoje (1ª vez às 09:40)"</em>. Na lista do popup, o item mostra <code>· ×3 hoje</code>. Serve para saber de cara se é um problema recorrente ou pontual.</p>
+
+        <h3>Ver de novo depois</h3>
+        <p>Os últimos erros ficam listados no popup. Clique num item para copiar só ele, ou use <strong>Baixar relatório</strong> para um arquivo <code>.html</code> com todos.</p>
+
+        <h3>Endereço do app server</h3>
+        <p>O campo <strong>"URL do app server"</strong> normalmente fica <strong>vazio</strong> — a extensão usa o mesmo endereço do TASY automaticamente. Só preencha se, na sua empresa, o app server ficar em outro endereço.</p>
+
+        <div class="warning">O relatório pode conter números de registros ou de pacientes ligados à operação que falhou (números longos são trocados por •). Sempre leia o relatório antes de anexar num chamado.</div>
+      </section>
+
+      <section>
+        <h2>Servidor / nó do app server</h2>
+
+        <h3>Para que serve</h3>
+        <p>Quando a empresa tem vários servidores de aplicação (um "cluster"), a sua sessão fica presa a um deles. Às vezes um erro só acontece em um servidor específico — e saber em qual você está economiza tempo no diagnóstico.</p>
+
+        <h3>Onde aparece</h3>
+        <p>A extensão descobre isso sozinha (do cookie <code>JSESSIONID</code>, cujo valor no Wheb é algo como <code>tasy-tasyappserver-…_1114~…</code>) e mostra o <strong>número do servidor</strong> — no exemplo, <code>1114</code> — em três lugares:</p>
+        <ul>
+          <li>no popup, logo abaixo da lista de erros: "Servidor atual: nó 1114";</li>
+          <li>no relatório de erro, na linha "Servidor (nó)";</li>
+          <li>na etiqueta de <strong>Cores por ambiente</strong>, se você tiver uma regra ativa: <code>HML · nó 1114</code>.</li>
+        </ul>
+        <p>Só o número do nó é lido — a extensão não lê nem guarda o restante da sua sessão.</p>
+      </section>
+
+      <section>
+        <h2>Gerar chamado</h2>
+
+        <h3>Para que serve</h3>
+        <p>Escrever um chamado completo dá trabalho: ambiente, versão, servidor, passos, o erro... Este botão junta tudo isso automaticamente, a partir do que a extensão já registrou.</p>
+
+        <h3>Como usar</h3>
+        <ol class="steps">
+          <li>Se quiser incluir o passo a passo, grave-o antes com o <strong>Registrar Processo</strong>.</li>
+          <li>Na seção <strong>Gerar chamado</strong>, escreva numa linha <strong>o que deveria acontecer</strong> e na outra <strong>o que aconteceu</strong>.</li>
+          <li>Clique em <strong>Gerar texto</strong>. O texto aparece na caixa, já com ambiente, nó do servidor, versão, função/tela, os passos e o último erro capturado.</li>
+          <li>Ajuste o que quiser direto na caixa e clique em <strong>Copiar</strong>.</li>
+        </ol>
+
+        <h3>Como fica o texto</h3>
+        <div class="example">AMBIENTE: tasy.suaempresa.com.br   |   nó do app server: 1114
+VERSÃO TASY: 5.04.1845.136
+FUNÇÃO/TELA: [2150] UUE - Triagem
+USUÁRIO: gabriel.oliveir
+
+PASSOS PARA REPRODUZIR:
+1. Abriu Cadastro de Perfil
+2. Clicou em Exportar
+
+ESPERADO: o perfil deveria exportar sem erro
+OBTIDO: erro "Nome de coluna inválido"
+
+--- ERRO CAPTURADO ---
+(o relatório completo da captura de erros entra aqui)</div>
+
+        <div class="warning">O texto inclui os passos e o erro capturado — revise antes de enviar caso envolva dados sensíveis.</div>
+      </section>
+
+      <section>
+        <h2>Explorador do app server</h2>
+
+        <h3>Para que serve</h3>
+        <p>O app server guarda, para cada usuário, um "rastro" de tudo que rodou no servidor: cada consulta SQL, cada procedure, cada erro. Esse rastro fica num console de arquivos difícil de navegar. Esta seção traz uma lista limpa disso dentro do popup — útil para ver a consulta exata que uma tela disparou, quanto tempo levou, ou o erro que acabou de acontecer.</p>
+
+        <h3>Como usar</h3>
+        <ol class="steps">
+          <li>Com o TASY aberto e logado na aba ativa, abra o popup e vá em <strong>Explorador do app server</strong>.</li>
+          <li>Clique em <strong>Atualizar lista</strong>. Aparecem os arquivos mais recentes do seu usuário (<code>SQL_…</code>, <code>PROCEDURE_…</code>, <code>ERRO_…</code>), com o tempo de execução e a hora.</li>
+          <li>Use o campo <strong>Filtrar por nome</strong> para achar rápido (ex.: digite <code>PERFIL</code>, <code>GERAR</code> ou <code>ERRO</code>).</li>
+          <li>Clique num item para ver o conteúdo na caixa de baixo — a consulta SQL já com os valores reais, ou o texto do erro. <strong>Copiar conteúdo</strong> leva tudo para a área de transferência.</li>
+        </ol>
+
+        <div class="warning">O conteúdo pode conter valores reais (inclusive de pacientes). Revise antes de compartilhar.</div>
       </section>
 
       <section>

@@ -404,3 +404,167 @@
 #tex-user-locale {
   margin-right: 6px;
 }
+
+/* --- Tasy error capture panel -------------------------------------------- */
+
+.tex-error-panel {
+  border-top-color: #DC2626;
+}
+
+.tex-error-header {
+  gap: 8px;
+}
+
+.tex-error-copy {
+  cursor: pointer;
+  padding: 6px 10px;
+  border: 1px solid rgba(241, 245, 249, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: #F1F5F9;
+  font-size: 12px;
+}
+
+.tex-error-copy:hover {
+  border-color: #F87171;
+  color: #F87171;
+}
+
+/* --- Inspect mode: "Contexto da função" block ------------------------------ */
+
+.tex-scope-context {
+  margin: 0 0 12px !important;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #111827;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #E2E8F0;
+  font-family: "Consolas", "Courier New", monospace !important;
+  font-size: 12px;
+  line-height: 1.45 !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tex-scope-context-label {
+  margin: 4px 0 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(226, 232, 240, 0.5);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.12);
+  padding-bottom: 4px;
+}
+
+/* --- Waterfall de rede --------------------------------------------------- */
+
+.tex-waterfall {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+  width: 440px;
+  max-width: 90vw;
+  max-height: 42vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(241, 245, 249, 0.15);
+  border-top: 4px solid #0284C7;
+  border-radius: 8px;
+  background-color: #0F172A;
+  color: #F1F5F9;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  font-family: "Segoe UI", Arial, sans-serif;
+  overflow: hidden;
+}
+
+.tex-waterfall-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: move;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.1);
+}
+
+.tex-waterfall-close {
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tex-waterfall-body {
+  overflow-y: auto;
+  padding: 6px 8px;
+}
+
+.tex-waterfall-empty {
+  padding: 10px;
+  font-size: 12px;
+  color: rgba(241, 245, 249, 0.5);
+}
+
+.tex-waterfall-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.tex-waterfall-row:hover {
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.tex-waterfall-row.copied {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.tex-waterfall-label {
+  flex: 0 0 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: "Consolas", "Courier New", monospace;
+}
+
+.tex-waterfall-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 10px;
+  background: rgba(241, 245, 249, 0.08);
+  border-radius: 3px;
+}
+
+.tex-waterfall-bar {
+  position: absolute;
+  top: 0;
+  height: 10px;
+  min-width: 2px;
+  border-radius: 3px;
+  background: #38BDF8;
+}
+
+.tex-waterfall-row.slow .tex-waterfall-bar {
+  background: #F59E0B;
+}
+
+.tex-waterfall-row.bad .tex-waterfall-bar {
+  background: #EF4444;
+}
+
+.tex-waterfall-ms {
+  flex: 0 0 52px;
+  text-align: right;
+  font-family: "Consolas", "Courier New", monospace;
+  color: rgba(241, 245, 249, 0.7);
+}
+
+.tex-waterfall-row.slow .tex-waterfall-ms {
+  color: #FBBF24;
+}

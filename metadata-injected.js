@@ -39,10 +39,36 @@
     }
   }
 
-  function reportApiCall(entry) {
+  const API_CALL_BUFFER_MAX = 20;
+  const RESPONSE_BODY_MAX = 3000;
+  const apiCallBuffer = [];
+
+  // Masks runs of 6+ digits (prontuário, CPF, phone, internal ids) while
+  // leaving short numbers like ORA-00904 or a version string intact.
+  function maskLongDigits(text) {
+    return String(text == null ? "" : text).replace(/\d{6,}/g, (match) => "•".repeat(Math.min(match.length, 8)));
+  }
+
+  function pushApiCallBuffer(entry) {
+    apiCallBuffer.push({ t: new Date().toISOString(), ...entry });
+    if (apiCallBuffer.length > API_CALL_BUFFER_MAX) {
+      apiCallBuffer.splice(0, apiCallBuffer.length - API_CALL_BUFFER_MAX);
+    }
+  }
+
+  function reportApiCall(entry, responseBody) {
     if (!entry.url || entry.url.includes("__tasy_probe")) {
       return;
     }
+    const failed = entry.ok === false || (typeof entry.httpStatus === "number" && entry.httpStatus >= 400);
+    const buffered = { ...entry };
+    // Response bodies are only kept for calls that actually failed, and only
+    // in this in-memory buffer - they leave the page only if an error dialog
+    // is captured while the user has "Capturar erros" turned on.
+    if (failed && typeof responseBody === "string" && responseBody.trim()) {
+      buffered.responseBody = maskLongDigits(responseBody).slice(0, RESPONSE_BODY_MAX);
+    }
+    pushApiCallBuffer(buffered);
     sendToBridge("API_CALL", { entry });
   }
 
@@ -56,13 +82,21 @@
         const url = relativeUrl(rawUrl);
         return originalFetch.apply(this, arguments).then(
           (response) => {
-            reportApiCall({
+            const call = {
               method: String(method).toUpperCase(),
               url,
               httpStatus: response.status,
               ok: response.ok,
               durationMs: Math.round(performance.now() - startedAt)
-            });
+            };
+            if (!response.ok) {
+              response
+                .clone()
+                .text()
+                .then((body) => reportApiCall(call, body), () => reportApiCall(call));
+            } else {
+              reportApiCall(call);
+            }
             return response;
           },
           (error) => {
@@ -91,13 +125,23 @@
       XHRProto.send = function patchedSend(...args) {
         const startedAt = performance.now();
         this.addEventListener("loadend", () => {
-          reportApiCall({
+          const ok = this.status >= 200 && this.status < 400;
+          const call = {
             method: String(this.__tasyExtMethod || "GET").toUpperCase(),
             url: relativeUrl(this.__tasyExtUrl),
             httpStatus: this.status || null,
-            ok: this.status >= 200 && this.status < 400,
+            ok,
             durationMs: Math.round(performance.now() - startedAt)
-          });
+          };
+          let body;
+          if (!ok) {
+            try {
+              body = typeof this.responseText === "string" ? this.responseText : undefined;
+            } catch (_error) {
+              body = undefined;
+            }
+          }
+          reportApiCall(call, body);
         });
         return originalSend.apply(this, args);
       };
@@ -717,6 +761,20 @@
 
       const content = document.createElement("div");
       content.className = "tex-scope-content";
+
+      try {
+        const contextPre = document.createElement("pre");
+        contextPre.className = "tex-scope-context";
+        contextPre.textContent = buildFunctionContext(el, this.recentFeatures);
+        content.appendChild(contextPre);
+        const divider = document.createElement("div");
+        divider.className = "tex-scope-context-label";
+        divider.textContent = "escopo AngularJS completo";
+        content.appendChild(divider);
+      } catch (_error) {
+        // context block is best-effort - never block the scope view
+      }
+
       const pre = document.createElement("pre");
       pre.innerHTML = scope ? renderScopeJson(scope) : "<em>Nenhum escopo AngularJS encontrado neste elemento.</em>";
       content.appendChild(pre);
@@ -781,11 +839,170 @@
     condition() {
       return true;
     }
-    render({ inspectMode }) {
+    render({ inspectMode, recentFeatures }) {
+      this.inspector.recentFeatures = recentFeatures;
       if (Boolean(inspectMode) !== this.inspector.isEnabled()) {
         this.inspector.setEnabled(Boolean(inspectMode));
       }
     }
+  }
+
+  // --- "Contexto da função": função + parâmetros + regras detectadas -------
+  // Reads from the AngularJS scope chain and the rendered DOM (the trace files
+  // only carry the rule/param queries, not which rule hit which component).
+  function texEscape(text) {
+    return String(text ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function scopeChain(el, max = 14) {
+    const chain = [];
+    let scope = angularScope(el);
+    let guard = 0;
+    while (scope && guard++ < max) {
+      chain.push(scope);
+      scope = scope.$parent;
+    }
+    return chain;
+  }
+
+  function shortValue(value, limit = 160) {
+    try {
+      const seen = new WeakSet();
+      const json = JSON.stringify(value, (key, val) => {
+        if (key.startsWith("$") || typeof val === "function") return undefined;
+        if (val instanceof Node || val instanceof Window) return undefined;
+        if (val && typeof val === "object") {
+          if (seen.has(val)) return undefined;
+          seen.add(val);
+        }
+        return val;
+      });
+      if (!json) return String(value);
+      return json.length > limit ? json.slice(0, limit) + "…" : json;
+    } catch (_error) {
+      return String(value);
+    }
+  }
+
+  function collectFunctionParams(chain) {
+    const out = [];
+    const seenKeys = new Set();
+    for (const scope of chain) {
+      for (const key of Object.keys(scope)) {
+        if (key.startsWith("$") || seenKeys.has(key)) continue;
+        if (!/param/i.test(key)) continue;
+        const value = scope[key];
+        if (value && typeof value === "object") {
+          seenKeys.add(key);
+          out.push({ key, value });
+        }
+      }
+    }
+    return out;
+  }
+
+  function nearestPanelInfo(el) {
+    for (const { containerClass, extractor } of PANEL_EXTRACTORS) {
+      const container = el.closest("." + containerClass);
+      if (!container) continue;
+      const scope = angularScope(container);
+      if (!scope) continue;
+      try {
+        return extractor(scope);
+      } catch (_error) {
+        // extractor shape mismatch on this version - try the next
+      }
+    }
+    return null;
+  }
+
+  const RULE_KEY_RE = /legenda|regra|\brule\b|^cor$|colou?r|visib|ordenac|ordering|imagem|image|schematic|esquemat/i;
+
+  function detectComponentRules(el, chain) {
+    const notes = [];
+    const colorHost = el.closest(".slick-cell, td, .w-attr-container, [style*='background']") || el;
+    try {
+      const bg = getComputedStyle(colorHost).backgroundColor;
+      if (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") {
+        notes.push("Cor de fundo aplicada: " + bg + " (pode vir de regra de legenda — TASY_PADRAO_COR)");
+      }
+    } catch (_error) {
+      // getComputedStyle can throw on detached nodes
+    }
+    const hidden = el.closest(".ng-hide, [style*='display: none'], [style*='display:none']");
+    if (hidden) {
+      const expr =
+        hidden.getAttribute("ng-show") || hidden.getAttribute("ng-if") || hidden.getAttribute("ng-hide") || "";
+      notes.push("Elemento/ancestral oculto" + (expr ? " (condição: " + expr + ")" : "") + " — possível regra de visibilidade");
+    }
+    for (const scope of chain) {
+      for (const key of Object.keys(scope)) {
+        if (key.startsWith("$") || !RULE_KEY_RE.test(key)) continue;
+        notes.push("escopo." + key + " = " + shortValue(scope[key]));
+      }
+    }
+    return [...new Set(notes)];
+  }
+
+  function buildFunctionContext(el, recentFeatures) {
+    const chain = scopeChain(el);
+    const lines = [];
+
+    const tabName =
+      document.querySelector(".w-tab--selected, .w-tab.selected, .tab.active, li.active")?.innerText?.trim() || "";
+    const feature = Array.isArray(recentFeatures) ? recentFeatures[0] : null;
+    lines.push(
+      "FUNÇÃO: " +
+        (feature ? (feature.code ? "[" + feature.code + "] " : "") + (feature.caption || feature.name || "") : tabName || document.title || "?")
+    );
+
+    const panel = nearestPanelInfo(el);
+    if (panel) {
+      lines.push(
+        "PAINEL: " +
+          [panel.code ? "código " + panel.code : "", panel.view ? "view " + panel.view : "", panel.table ? "tabela " + panel.table : ""]
+            .filter(Boolean)
+            .join(" · ")
+      );
+    }
+
+    const params = collectFunctionParams(chain);
+    lines.push("");
+    lines.push("PARÂMETROS (encontrados no escopo):");
+    if (params.length) {
+      params.forEach((p) => {
+        lines.push("• " + p.key + ":");
+        if (Array.isArray(p.value)) {
+          p.value.slice(0, 60).forEach((item) => lines.push("    " + shortValue(item, 200)));
+        } else {
+          Object.keys(p.value)
+            .filter((k) => !k.startsWith("$"))
+            .slice(0, 80)
+            .forEach((k) => lines.push("    " + k + " = " + shortValue(p.value[k], 200)));
+        }
+      });
+    } else {
+      lines.push("  (nenhum objeto com 'param' no nome foi encontrado neste escopo)");
+    }
+
+    const rules = detectComponentRules(el, chain);
+    lines.push("");
+    lines.push("REGRAS DETECTADAS:");
+    if (rules.length) {
+      rules.forEach((r) => lines.push("• " + r));
+    } else {
+      lines.push("  (nada evidente na cor/visibilidade/escopo deste elemento)");
+    }
+
+    lines.push("");
+    lines.push("Dica: as consultas de regras e parâmetros aparecem no Explorador do app server");
+    lines.push("(SQL_SQL_GET_COLOR_RULES, SQL_SQL_GET_VISIBILITY_RULE, SQL_SCRIPT_PARAMETERS, OBTER_PARAMETROS_USUARIO).");
+
+    return lines.join("\n");
   }
 
   // --- Report layout preview: visual canvas for grids with Esquerda/Topo/
@@ -1097,26 +1314,89 @@
     return luminance > 0.6 ? "#0F172A" : "#FFFFFF";
   }
 
+  // The logged establishment (matriz / filial). Tasy shows it only in the
+  // footer, which is easy to miss on a multi-establishment install.
+  function readEstablishment() {
+    // 1) Tasy HTML5 has a dedicated footer element for it.
+    try {
+      // Usually this is a CSS class, but some TASY builds render it as the
+      // element name itself.  Prefer this dedicated field over the complete
+      // footer, which also contains company, database and version details.
+      const el = document.querySelector(".w-footer__establishment, w-footer__establishment");
+      const value = el && (el.innerText || el.textContent);
+      if (value && value.trim()) {
+        return value.trim().slice(0, 40);
+      }
+    } catch (_error) {
+      // fall through
+    }
+    // 2) AngularJS scope, when available.
+    try {
+      const scope = angularScope(document.querySelector(".w-header"));
+      const user = scope && scope.user;
+      const candidate =
+        (user && (user.nmEstabelecimento || user.dsEstabelecimento || user.nomeEstabelecimento || user.estabelecimento)) ||
+        (scope && (scope.nmEstabelecimento || scope.dsEstabelecimento));
+      if (typeof candidate === "string" && candidate.trim()) {
+        return candidate.trim().slice(0, 40);
+      }
+      if (candidate && typeof candidate === "object") {
+        const name = candidate.nmEstabelecimento || candidate.dsEstabelecimento || candidate.ds || candidate.nome || candidate.descricao;
+        if (name) return String(name).trim().slice(0, 40);
+      }
+    } catch (_error) {
+      // fall through
+    }
+    // 3) Last resort: scrape the footer text (older layouts without the element).
+    try {
+      const footer = document.querySelector(".w-footer");
+      if (footer) {
+        let text = footer.innerText || "";
+        footer.querySelectorAll(".w-footer__date, .w-footer__time, .w-footer__corp-name, .w-footer__database, .w-footer__privacy-policy").forEach((n) => {
+          if (n.innerText) text = text.split(n.innerText).join(" ");
+        });
+        text = text
+          .replace(/\bW?TASY\s+[\d.]+/i, " ")
+          .replace(/UTC\s*\([^)]*\)/i, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        const parts = text.split(/\s+[-–]\s+/).map((p) => p.trim()).filter(Boolean);
+        const tail = parts.length > 1 ? parts[parts.length - 1] : text;
+        return tail.slice(0, 40);
+      }
+    } catch (_error) {
+      // no footer
+    }
+    return "";
+  }
+
   class EnvironmentIndicatorRenderer extends Renderer {
-    condition() {
-      // Only reacts to setOptions (initial load / rule changes) - the
-      // hostname can't change without a real navigation, which reinjects
-      // this script anyway, so no need to watch DOM mutations here.
+    condition({ type, addedNodes }) {
+      // Re-render once the footer mounts, so the establishment (read from it)
+      // makes it into the badge on a fresh page load.
+      if (type !== "childList") {
+        return false;
+      }
+      for (const node of addedNodes) {
+        if (node.nodeType === 1 && (node.matches?.(".w-footer") || node.querySelector?.(".w-footer"))) {
+          return true;
+        }
+      }
       return false;
     }
-    render({ environmentRules }) {
+    render({ environmentRules, serverNode, showEstablishment }) {
       const rules = Array.isArray(environmentRules) ? environmentRules : [];
       const hostname = window.location.hostname.toLowerCase();
       const match = rules.find((rule) => rule.match && hostname.includes(String(rule.match).toLowerCase()));
+      const establishment = showEstablishment ? readEstablishment() : "";
+      const nodeSuffix = serverNode && serverNode.node ? ` · nó ${serverNode.node}` : "";
+      const estabSuffix = establishment ? ` · ${establishment}` : "";
 
-      if (!match) {
+      if (!match && !establishment) {
         document.documentElement.style.outline = "";
         document.querySelector(".tex-env-badge")?.remove();
         return;
       }
-
-      document.documentElement.style.outline = `4px solid ${match.color}`;
-      document.documentElement.style.outlineOffset = "-4px";
 
       let badge = document.querySelector(".tex-env-badge");
       if (!badge) {
@@ -1125,9 +1405,309 @@
         document.body.appendChild(badge);
         makeDraggable(badge, badge);
       }
-      badge.style.backgroundColor = match.color;
-      badge.style.color = pickReadableTextColor(match.color);
-      badge.innerText = match.label || match.match;
+
+      if (match) {
+        document.documentElement.style.outline = `4px solid ${match.color}`;
+        document.documentElement.style.outlineOffset = "-4px";
+        badge.style.backgroundColor = match.color;
+        badge.style.color = pickReadableTextColor(match.color);
+        badge.innerText = (match.label || match.match) + estabSuffix + nodeSuffix;
+      } else {
+        // No environment rule for this host, but the user wants the
+        // establishment shown - neutral badge, no screen border.
+        document.documentElement.style.outline = "";
+        badge.style.backgroundColor = "#475569";
+        badge.style.color = "#FFFFFF";
+        badge.innerText = establishment + nodeSuffix;
+      }
+    }
+  }
+
+  // --- Tasy application error capture ------------------------------------
+  // Watches for the "Houve um erro na execução da aplicação" dialog. When it
+  // appears (and "Capturar erros" is on), it expands "Mais detalhes", reads
+  // the whole message plus the logged user and any app-server link, and ships
+  // it to content.js with the recent backend-call buffer. content.js then
+  // fetches/parses the app-server ERRO file and stores an interpreted report.
+  const ERROR_DIALOG_RE = /erro na execu[çc][aã]o da aplica[çc][aã]o|ocorreu um erro inesperado/i;
+
+  function readLoggedUser() {
+    try {
+      const headerScope = angularScope(document.querySelector(".w-header"));
+      const user = headerScope && headerScope.user;
+      if (user) {
+        return String(user.username || user.login || user.nmUsuario || user.dsUsuario || "").trim();
+      }
+    } catch (_error) {
+      // header scope unavailable - content.js can still fall back to a manual value
+    }
+    return "";
+  }
+
+  class TasyErrorWatcher {
+    constructor() {
+      this.enabled = false;
+      this.observer = new MutationObserver((mutations) => this._onMutations(mutations));
+      this.lastSignature = "";
+      this.lastAt = 0;
+      this.suppressUntil = 0;
+    }
+    setEnabled(enabled) {
+      if (enabled === this.enabled) {
+        return;
+      }
+      this.enabled = enabled;
+      if (enabled) {
+        this.observer.observe(document.body, { childList: true, subtree: true });
+        this._scan(document.body);
+      } else {
+        this.observer.disconnect();
+      }
+    }
+    _onMutations(mutations) {
+      if (Date.now() < this.suppressUntil) {
+        return;
+      }
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === 1) {
+            this._scan(node);
+          }
+        }
+      }
+    }
+    _scan(node) {
+      if (!node || typeof node.querySelector !== "function") {
+        return;
+      }
+      const probe = node.textContent || "";
+      if (probe.length > 20000 || !ERROR_DIALOG_RE.test(probe)) {
+        return;
+      }
+      let dialog = node;
+      for (let i = 0; i < 6 && dialog; i++) {
+        if (dialog.querySelector && dialog.querySelector("button")) {
+          break;
+        }
+        dialog = dialog.parentElement;
+      }
+      if (dialog) {
+        this._capture(dialog);
+      }
+    }
+    _capture(dialog) {
+      const now = Date.now();
+      if (now < this.suppressUntil) {
+        return;
+      }
+      let raw = "";
+      try {
+        raw = dialog.innerText || "";
+      } catch (_error) {
+        return;
+      }
+      const signature = raw.replace(/\s+/g, " ").trim().slice(0, 300);
+      if (!signature || (signature === this.lastSignature && now - this.lastAt < 8000)) {
+        return;
+      }
+      this.lastSignature = signature;
+      this.lastAt = now;
+      this.suppressUntil = now + 1500;
+
+      let expanded = false;
+      dialog.querySelectorAll("a, span, button, div").forEach((el) => {
+        if (expanded) {
+          return;
+        }
+        const label = (el.innerText || "").trim().toLowerCase();
+        if (label === "mais detalhes" || label.startsWith("mais detalhes")) {
+          try {
+            el.click();
+            expanded = true;
+          } catch (_error) {
+            // still ship whatever is visible
+          }
+        }
+      });
+
+      window.setTimeout(() => this._emit(dialog, raw), expanded ? 220 : 0);
+    }
+    _emit(dialog, fallbackText) {
+      let clean = fallbackText;
+      try {
+        clean = dialog.innerText || fallbackText;
+      } catch (_error) {
+        clean = fallbackText;
+      }
+      clean = String(clean).replace(/\r/g, "").trim();
+
+      const detalhes = (clean.match(/Detalhes:\s*([\s\S]*?)(?:\n\s*Mais informa[çc][õo]es:|\n\s*Vers[aã]o:|$)/i) || [])[1] || "";
+      const moreInfo = (clean.match(/Mais informa[çc][õo]es:\s*(.+)/i) || [])[1] || "";
+      const version = (clean.match(/Vers[aã]o:\s*([\d.]+)/i) || [])[1] || "";
+      const detalheLines = detalhes.split("\n").map((s) => s.trim()).filter(Boolean);
+      const summary = detalheLines[detalheLines.length - 1] || "";
+      const titleLines = clean.split("\n").map((s) => s.trim()).filter(Boolean);
+
+      let moreInfoHref = "";
+      try {
+        const link = [...dialog.querySelectorAll("a[href]")].find((a) => /arquivo\.jsp|appserver|wheb_arquivo/i.test(a.getAttribute("href") || ""));
+        moreInfoHref = link ? link.href : "";
+      } catch (_error) {
+        moreInfoHref = "";
+      }
+
+      let footerVersion = "";
+      try {
+        const footerText = document.querySelector(".w-footer, .footer, footer")?.innerText || "";
+        footerVersion = (footerText.match(/\b(\d+\.\d+\.\d+\.\d+)\b/) || [])[1] || "";
+      } catch (_error) {
+        // no footer
+      }
+
+      let screenHint = "";
+      try {
+        screenHint =
+          document.querySelector(".w-tab--selected, .w-tab.selected, .tab.active, li.active")?.innerText?.trim() ||
+          document.title ||
+          "";
+      } catch (_error) {
+        screenHint = "";
+      }
+
+      sendToBridge("TASY_ERROR_CAPTURED", {
+        payload: {
+          capturedAt: new Date().toISOString(),
+          title: titleLines[0] || "Houve um erro na execução da aplicação",
+          summary: maskLongDigits(summary),
+          detalhes: maskLongDigits(detalhes),
+          moreInfo: moreInfo.trim(),
+          moreInfoHref,
+          version: (version || footerVersion).trim(),
+          fullText: maskLongDigits(clean).slice(0, 4000),
+          user: readLoggedUser(),
+          establishment: readEstablishment(),
+          origin: window.location.origin,
+          screenHint: String(screenHint || "").slice(0, 200),
+          apiCalls: apiCallBuffer.slice(-API_CALL_BUFFER_MAX)
+        }
+      });
+    }
+  }
+
+  const tasyErrorWatcher = new TasyErrorWatcher();
+
+  class ErrorCaptureRenderer extends Renderer {
+    condition() {
+      return false;
+    }
+    render({ captureErrors }) {
+      tasyErrorWatcher.setEnabled(Boolean(captureErrors));
+    }
+  }
+
+  // --- Waterfall de rede: mini timeline of the recent real requests --------
+  function waterfallShortUrl(rawUrl) {
+    try {
+      const u = new URL(rawUrl, window.location.href);
+      const segs = u.pathname.split("/").filter(Boolean).slice(-2).join("/");
+      const firstParam = u.search ? u.search.replace(/^\?/, "").split("&")[0] : "";
+      return "/" + segs + (firstParam ? "?" + firstParam : "");
+    } catch (_error) {
+      return String(rawUrl || "").slice(0, 80);
+    }
+  }
+
+  class NetworkWaterfall {
+    constructor() {
+      this.panel = null;
+      this.timer = null;
+      this.calls = [];
+    }
+    setEnabled(enabled) {
+      if (enabled && !this.panel) {
+        this.panel = document.createElement("div");
+        this.panel.className = "tex-waterfall";
+        this.panel.innerHTML =
+          '<div class="tex-waterfall-head">Rede — últimas chamadas <span class="tex-waterfall-close" title="Fechar">×</span></div>' +
+          '<div class="tex-waterfall-body"></div>';
+        this.panel.querySelector(".tex-waterfall-close").addEventListener("click", () => this.setEnabled(false));
+        makeDraggable(this.panel.querySelector(".tex-waterfall-head"), this.panel);
+        document.body.appendChild(this.panel);
+        this.timer = window.setInterval(() => this.render(), 1000);
+        this.render();
+      } else if (!enabled && this.panel) {
+        window.clearInterval(this.timer);
+        this.timer = null;
+        this.panel.remove();
+        this.panel = null;
+      }
+    }
+    render() {
+      if (!this.panel) return;
+      const body = this.panel.querySelector(".tex-waterfall-body");
+      const calls = apiCallBuffer.slice(-15);
+      this.calls = calls;
+      if (!calls.length) {
+        body.innerHTML = '<div class="tex-waterfall-empty">Sem chamadas registradas ainda.</div>';
+        return;
+      }
+      const times = calls.map((c) => new Date(c.t).getTime());
+      const t0 = Math.min(...times);
+      const span = Math.max(1, ...calls.map((c, i) => times[i] - t0 + (c.durationMs || 0)));
+      const maxDur = Math.max(1, ...calls.map((c) => c.durationMs || 0));
+      body.innerHTML = calls
+        .map((c, i) => {
+          const start = times[i] - t0;
+          const dur = c.durationMs || 0;
+          const left = (start / span) * 100;
+          const width = Math.max(1.5, (dur / span) * 100);
+          const slow = dur >= 800 || (dur === maxDur && dur > 250);
+          const bad = c.ok === false || (typeof c.httpStatus === "number" && c.httpStatus >= 400);
+          const label = (c.method || "") + " " + waterfallShortUrl(c.url);
+          return (
+            '<div class="tex-waterfall-row' +
+            (slow ? " slow" : "") +
+            (bad ? " bad" : "") +
+            '" data-i="' +
+            i +
+            '" title="' +
+            texEscape(label + "  ·  HTTP " + (c.httpStatus || "?") + "  ·  " + dur + "ms") +
+            '">' +
+            '<span class="tex-waterfall-label">' +
+            texEscape(label) +
+            "</span>" +
+            '<span class="tex-waterfall-track"><span class="tex-waterfall-bar" style="left:' +
+            left.toFixed(1) +
+            "%;width:" +
+            width.toFixed(1) +
+            '%"></span></span>' +
+            '<span class="tex-waterfall-ms">' +
+            dur +
+            "ms</span></div>"
+          );
+        })
+        .join("");
+      body.querySelectorAll(".tex-waterfall-row").forEach((row) => {
+        row.addEventListener("click", () => {
+          const call = this.calls[Number(row.dataset.i)];
+          if (call && call.url) {
+            navigator.clipboard.writeText(call.url).catch(() => {});
+            row.classList.add("copied");
+            window.setTimeout(() => row.classList.remove("copied"), 500);
+          }
+        });
+      });
+    }
+  }
+
+  const networkWaterfall = new NetworkWaterfall();
+
+  class WaterfallRenderer extends Renderer {
+    condition() {
+      return false;
+    }
+    render({ showWaterfall }) {
+      networkWaterfall.setEnabled(Boolean(showWaterfall));
     }
   }
 
@@ -1139,6 +1719,8 @@
   manager.add(new InspectModeRenderer());
   manager.add(new ReportLayoutRenderer());
   manager.add(new EnvironmentIndicatorRenderer());
+  manager.add(new ErrorCaptureRenderer());
+  manager.add(new WaterfallRenderer());
 
   window.addEventListener("message", (event) => {
     if (event.source !== window) {

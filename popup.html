@@ -23,6 +23,11 @@
 
       <div class="section-title">Metadados TASY</div>
 
+      <label class="checkbox-label" id="metadataToggleAllRow">
+        <input id="metadataToggleAll" type="checkbox" />
+        <strong>Ativar todos</strong>
+      </label>
+
       <div class="field metadata-grid">
         <label class="checkbox-label">
           <input id="showFieldDetails" type="checkbox" />
@@ -52,6 +57,10 @@
           <input id="showReportLayout" type="checkbox" />
           Layout visual (relatórios)
         </label>
+        <label class="checkbox-label">
+          <input id="showWaterfall" type="checkbox" />
+          Waterfall de rede
+        </label>
       </div>
 
       <div class="actions">
@@ -67,6 +76,11 @@
         <div class="actions">
           <button id="addEnvironmentRuleBtn" type="button">+ Adicionar regra</button>
         </div>
+        <label class="checkbox-label">
+          <input id="showEstablishment" type="checkbox" />
+          Mostrar o estabelecimento logado na etiqueta (matriz/filial)
+        </label>
+        <p class="trace-hint">Útil em instalações multi-estabelecimento. Se não houver regra de cor para o domínio, mostra uma etiqueta cinza só com o estabelecimento.</p>
       </div>
 
       <div class="section-title">Registrar Processo</div>
@@ -75,6 +89,52 @@
         <p class="trace-hint">Inicie antes de executar o processo que quer documentar (ex.: criar um usuário). Ao parar, o passo a passo é copiado automaticamente e um relatório em HTML (com prints de cada passo) é baixado — pronto para anexar num chamado.</p>
         <div class="actions">
           <button id="toggleTraceBtn" type="button" class="primary">Iniciar registro</button>
+        </div>
+      </div>
+
+      <div class="section-title">Capturar erros</div>
+
+      <div class="field">
+        <p class="trace-hint">Ligue e esqueça. Quando o TASY mostrar "Houve um erro na execução da aplicação", a extensão lê o detalhe no app server, explica em linguagem simples o que aconteceu e em qual processo, e mostra um botão "Copiar relatório" pronto pro chamado.</p>
+        <label class="checkbox-label">
+          <input id="captureErrors" type="checkbox" />
+          Capturar e explicar erros do TASY
+        </label>
+        <input id="appServerBaseUrl" type="text" placeholder="URL do app server (vazio = automático)" autocomplete="off" />
+        <div class="actions">
+          <button id="testAppServerBtn" type="button">Testar acesso</button>
+          <button id="downloadErrorsBtn" type="button">Baixar relatório</button>
+          <button id="clearErrorsBtn" type="button">Limpar</button>
+        </div>
+        <div id="errorCaptureList" class="dictionary-results"></div>
+        <p id="serverNodeInfo" class="trace-hint"></p>
+      </div>
+
+      <div class="section-title">Gerar chamado</div>
+
+      <div class="field">
+        <p class="trace-hint">Monta o texto do chamado com ambiente, servidor, versão, função, passos (do Registrar Processo) e o último erro capturado. Edite e copie.</p>
+        <input id="ticketEsperado" type="text" placeholder="O que deveria acontecer (esperado)" autocomplete="off" />
+        <input id="ticketObtido" type="text" placeholder="O que aconteceu (obtido)" autocomplete="off" />
+        <div class="actions">
+          <button id="genTicketBtn" type="button" class="primary">Gerar texto</button>
+          <button id="copyTicketBtn" type="button">Copiar</button>
+        </div>
+        <textarea id="ticketOutput" rows="10" placeholder="O texto do chamado aparece aqui." spellcheck="false"></textarea>
+      </div>
+
+      <div class="section-title">Explorador do app server</div>
+
+      <div class="field">
+        <p class="trace-hint">Lista os arquivos de trace recentes do seu usuário no app server (consultas SQL, procedures e erros). Clique num item para ver o conteúdo e copiar.</p>
+        <div class="actions">
+          <button id="explorerRefreshBtn" type="button">Atualizar lista</button>
+        </div>
+        <input id="explorerFilter" type="text" placeholder="Filtrar por nome (ex.: PERFIL, GERAR, ERRO)" autocomplete="off" />
+        <div id="explorerList" class="dictionary-results"></div>
+        <textarea id="explorerDetail" rows="10" placeholder="Conteúdo do arquivo selecionado." spellcheck="false" readonly></textarea>
+        <div class="actions">
+          <button id="explorerCopyBtn" type="button">Copiar conteúdo</button>
         </div>
       </div>
 

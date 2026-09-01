@@ -164,19 +164,36 @@ button.primary.recording:hover {
   color: rgba(15, 23, 42, 0.65);
 }
 
-#dictionarySearch {
+#dictionarySearch,
+.field > input[type="text"],
+.field > textarea {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(15, 23, 42, 0.25);
   border-radius: 6px;
   padding: 8px;
+  margin-bottom: 6px;
   font-size: 12px;
   font-family: inherit;
   background: #ffffff;
   color: var(--ink);
 }
 
-#dictionarySearch:focus {
+.field > textarea {
+  resize: vertical;
+  line-height: 1.4;
+}
+
+#ticketOutput,
+#explorerDetail {
+  font-family: "Consolas", "Courier New", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#dictionarySearch:focus,
+.field > input[type="text"]:focus,
+.field > textarea:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
