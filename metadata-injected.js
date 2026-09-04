@@ -498,6 +498,13 @@
             info.appendChild(this._createItem(table));
           }
           target.style.position = "relative";
+          target.classList.add("tex-panel-info-host");
+          // Compact rows (e.g. CPOE's stacked category swimlanes, ~49px tall)
+          // don't have room for the badge next to the native title without
+          // covering it - reveal those only on hover instead of always-on.
+          if (target.getBoundingClientRect().height < 60) {
+            info.classList.add("tex-panel-info-compact");
+          }
           target.appendChild(info);
         });
       });

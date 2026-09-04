@@ -64,7 +64,7 @@ Cada opção liga/desliga independentemente pelo popup, em **Metadados TASY** (a
 
 - **Detalhes de campo**: mostra, acima de cada campo de formulário, o nome técnico da coluna (ex.: `CD_RELATORIO`, `DS_TITULO`).
 - **Detalhes de grid**: mostra o nome técnico da coluna no cabeçalho de cada grid (SlickGrid).
-- **Detalhes de painel**: mostra código/tipo, view e tabela do painel atual (ex.: `WDBPANEL 1038025`, `VIEW 96218`, `RELATORIO`).
+- **Detalhes de painel**: mostra código/tipo, view e tabela do painel atual (ex.: `WDBPANEL 1038025`, `VIEW 96218`, `RELATORIO`). Em linhas curtas e empilhadas (ex.: categorias da CPOE), o badge fica fixo no canto inferior direito da linha em vez de cobrir o título nativo.
 - **Recentes (tela inicial)**: painel lateral na tela inicial do TASY com as últimas telas abertas, para acesso rápido (clique para abrir, "×" para remover).
 - **Idioma do usuário no rodapé**: mostra o idioma da sessão atual ao lado da data no rodapé.
 - **Modo inspeção**: exibe um botão "Inspecionar" fixo na tela; ao clicar em qualquer elemento, abre uma janela com **Contexto da função** (função aberta, painel/view/tabela, parâmetros encontrados no escopo e regras detectadas — cor/visibilidade) e, abaixo, o escopo AngularJS completo.

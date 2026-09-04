@@ -179,6 +179,17 @@
   gap: 4px;
   top: 5px;
   left: 5px;
+  z-index: 3;
+}
+
+/* Compact rows (short panels, e.g. CPOE's stacked category swimlanes) don't
+   have room for the badge without covering the native title - pin it to the
+   bottom-right corner instead, out of the title's way but always visible. */
+.tex-panel-info-container.tex-panel-info-compact {
+  top: auto;
+  left: auto;
+  right: 4px;
+  bottom: 2px;
 }
 
 /* --- Report layout preview -------------------------------------------------- */

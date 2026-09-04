@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Tasy DevTools",
   "description": "Monitora oscilações do TASY e exibe metadados técnicos das telas: campos, grids, painéis e itens recentes.",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
