@@ -750,7 +750,8 @@ function interpretErrorClass({ text, version }) {
       checks: [
         name ? "Verificar no banco se `" + name + "` existe e está acessível ao usuário do Tasy." : "Verificar se o objeto existe e está acessível.",
         "Rodar a rotina de recriação de sinônimos/permissões, se aplicável.",
-        "Conferir scripts de atualização pendentes" + vRef + "."
+        "Conferir scripts de atualização pendentes" + vRef + ".",
+        "Administração do Sistema → Consultas → Objetos Inválidos: ver se a view/objeto existe porém está inválido."
       ]
     },
     {
@@ -769,14 +770,22 @@ function interpretErrorClass({ text, version }) {
       signature: "Referência a registro inexistente (chave estrangeira)",
       what: "A gravação aponta para outro registro (FK) que não foi encontrado.",
       causes: ["Cadastro pai não existe ou foi excluído.", "Ordem de gravação/integração invertida."],
-      checks: ["Conferir se o registro referenciado existe e está ativo.", name ? "A constraint `" + name + "` identifica o vínculo." : ""]
+      checks: [
+        "Conferir se o registro referenciado existe e está ativo.",
+        name ? "A constraint `" + name + "` identifica o vínculo." : "",
+        "Administração do Sistema → Consultas → Inconsistências: conferir se há integridades (FKs) desabilitadas que deixaram passar dados órfãos."
+      ]
     },
     {
       re: /ORA-02292|child record found|REFERENCE constraint.*DELETE/i,
       signature: "Exclusão bloqueada por registros dependentes",
       what: "Não dá para excluir porque há registros vinculados a este.",
       causes: ["Existem movimentos/filhos usando este cadastro."],
-      checks: ["Inativar em vez de excluir, ou remover antes os dependentes.", name ? "A constraint `" + name + "` indica a tabela dependente." : ""]
+      checks: [
+        "Inativar em vez de excluir, ou remover antes os dependentes.",
+        name ? "A constraint `" + name + "` indica a tabela dependente." : "",
+        "Administração do Sistema → Consultas → Log exclusão: ver o histórico de exclusões dessa tabela para entender o vínculo."
+      ]
     },
     {
       re: /ORA-01400|cannot insert null|null into column|n[ãa]o pode ser (nul|vazi)/i,
@@ -811,14 +820,22 @@ function interpretErrorClass({ text, version }) {
       signature: "Registro bloqueado ou deadlock",
       what: "O registro está bloqueado por outra sessão/usuário, ou houve deadlock.",
       causes: ["Outro usuário editando o mesmo registro.", "Transação anterior travada.", "Job em execução na mesma tabela."],
-      checks: ["Aguardar e repetir.", "Se persistir, checar sessões bloqueadas no banco (DBA)."]
+      checks: [
+        "Aguardar e repetir.",
+        "Administração do Sistema → Consultas → Lock banco: identificar a sessão que está travando (e, com o DBA, encerrá-la se necessário).",
+        "Administração do Sistema → Consultas → Jobs: ver se há job em execução na mesma tabela."
+      ]
     },
     {
       re: /ORA-06502|numeric or value error|PLS-\d+|ORA-06512/i,
       signature: "Erro dentro de bloco PL/SQL (function/procedure/trigger)",
       what: "Um objeto de programação do banco falhou (conversão de tipo, tamanho de variável, argumentos).",
       causes: ["Function/procedure/trigger customizada com problema.", "Dado fora do formato esperado pelo código."],
-      checks: ["Identificar o objeto pelo stack do app server abaixo.", "Costuma exigir ajuste na customização ou chamado TOTVS."]
+      checks: [
+        "Identificar o objeto pelo stack do app server abaixo.",
+        "Administração do Sistema → Consultas → Objetos Inválidos (ou `select * from inv_v;`): conferir se a function/procedure/trigger envolvida está inválida.",
+        "Costuma exigir ajuste na customização ou chamado TOTVS."
+      ]
     },
     {
       re: /certificateexpired|certificatenotyetvalid|pkix path|sslhandshake|keystore|certificado (digital )?(vencid|expirad|inv[aá]lid)|assinatura digital|invalid signature|chave privada|certpathvalidator/i,
@@ -832,6 +849,8 @@ function interpretErrorClass({ text, version }) {
       checks: [
         "Abrir Gerenciador de Certificado Digital → aba Certificado digital → sub-aba Detalhes do certificado digital, e conferir a data de vencimento.",
         "Na aba Configurações, conferir se o aviso de vencimento está com antecedência suficiente para não pegar de surpresa.",
+        "Administração do Sistema → Usuário → cadastro do usuário: conferir os campos Validade certificado digital e Forma renovação.",
+        "Administração do Sistema → Assinatura digital: conferir se o projeto de assinatura da função está liberado (a liberação ocorre nas configurações do Perfil).",
         "Se vencido, renovar o certificado com a autoridade certificadora e recadastrar o arquivo/senha."
       ]
     },
@@ -846,7 +865,9 @@ function interpretErrorClass({ text, version }) {
       ],
       checks: [
         "Administração do Sistema → Perfis → Cadastro → Funções: conferir se a função está liberada para o perfil do usuário.",
+        "Administração do Sistema → Consultas → Funções x Usuário / Usuário x Perfil: ver exatamente quais funções e perfis o usuário tem.",
         "Controle de Acesso → Consulta: testar diretamente se o estabelecimento/setor/perfil/usuário tem acesso a este atendimento/paciente.",
+        "Administração do Sistema → Restringir acesso: conferir restrições específicas por estabelecimento/perfil/função.",
         "Se for um componente específico da tela (não a função inteira), ver Administração do Sistema → Configurações de Utilização, filtrando pela função."
       ]
     },

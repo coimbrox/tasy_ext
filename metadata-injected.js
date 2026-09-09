@@ -1055,12 +1055,21 @@
     lines.push("");
     lines.push("Dica: as consultas de regras e parâmetros aparecem no Explorador do app server");
     lines.push("(SQL_SQL_GET_COLOR_RULES, SQL_SQL_GET_VISIBILITY_RULE, SQL_SCRIPT_PARAMETERS, OBTER_PARAMETROS_USUARIO).");
+
+    const funcRef = feature
+      ? ((feature.code ? "[" + feature.code + "] " : "") + (feature.caption || feature.name || "")).trim() || "a função atual"
+      : "a função atual";
+    const tableRef = panel && panel.table ? "`" + panel.table + "`" : "a tabela do componente";
+    lines.push("");
+    lines.push("ONDE CONFIGURAR NO TASY (Administração do Sistema):");
+    lines.push("• Regras de atributo (visível / obrigatório / valor padrão / enable / somente leitura, incl. script PL/SQL):");
+    lines.push("    Configurações de Utilização → filtrar " + funcRef + " → navegar até " + tableRef + " / o atributo");
+    lines.push("• Legendas e cores da tabela:  Configurações de Utilização → Tabela → Legendas");
+    lines.push("• Permissões de incluir / alterar / excluir na tabela:  Configurações de Utilização → Tabela → Permissões");
+    lines.push("• Parâmetros da função:  Parâmetros função → buscar " + funcRef + " (filtro Perfil / Estabelecimento / Usuário)");
+    lines.push("• Botão direito (BDM) / Handlebar / Abas:  Configurações de Utilização → BDM / Handlebar / Tab");
     if (panel && panel.table) {
-      lines.push(
-        "Dica: pra ver quem alterou ou excluiu um registro da tabela `" +
-          panel.table +
-          "`, use Administração do Sistema → Consultas → Log Alteração / Log exclusão."
-      );
+      lines.push("• Quem alterou / excluiu um registro de " + tableRef + ":  Consultas → Log alteração / Log exclusão");
     }
 
     return lines.join("\n");
