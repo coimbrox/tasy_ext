@@ -7,6 +7,41 @@
 (() => {
   const MSG_MARK = "__tasyExt";
 
+  // i18n.js loads before this file in the same content_scripts entry and sets
+  // window.TasyI18n. If that ever fails to happen in this (MAIN) world, use a
+  // local implementation that content.js feeds the real string table into via
+  // the OPTIONS bridge - so a missing translation layer can never stop the
+  // overlays from rendering, and the labels stay correct anyway.
+  const TasyI18n =
+    (typeof window !== "undefined" && window.TasyI18n) ||
+    (() => {
+      let strings = {};
+      let lang = "pt";
+      return {
+        t(key, vars) {
+          const entry = strings[key];
+          let str = entry ? entry[lang] || entry.pt : key;
+          if (vars && str) {
+            Object.keys(vars).forEach((name) => {
+              str = str.replace(new RegExp("\\{\\{" + name + "\\}\\}", "g"), String(vars[name]));
+            });
+          }
+          return str;
+        },
+        setLang(value) {
+          lang = value === "en" ? "en" : "pt";
+        },
+        getLang() {
+          return lang;
+        },
+        _installStrings(table) {
+          if (table && typeof table === "object") {
+            strings = table;
+          }
+        }
+      };
+    })();
+
   function angularScope(el) {
     if (!el || !window.angular || typeof window.angular.element !== "function") {
       return null;
@@ -228,7 +263,7 @@
       }
       target.dataset.copyFeedback = "1";
       const previousText = target.innerText;
-      target.innerText = "Copiado!";
+      target.innerText = TasyI18n.t("btn_copied");
       window.setTimeout(() => {
         target.innerText = previousText;
         delete target.dataset.copyFeedback;
@@ -492,7 +527,17 @@
           info.classList.add("tex-panel-info-container");
           info.appendChild(this._createItem(code, type || "CODE"));
           if (view) {
-            info.appendChild(this._createItem(view, "VIEW"));
+            // dic_objeto is Tasy's own object dictionary. Looking up the view's
+            // nr_sequencia there is a lead worth trying, not a guarantee: in
+            // practice it can return a screen field/component instead of the
+            // panel's real table/view, since the dictionary covers both. Never
+            // returns the view's SQL text itself either way.
+            info.appendChild(
+              this._createItem(view, "VIEW", {
+                clipboard: `select * from dic_objeto where nr_sequencia = ${view};`,
+                title: TasyI18n.t("view_badge_copy_hint", { view })
+              })
+            );
           }
           if (table) {
             info.appendChild(this._createItem(table));
@@ -509,12 +554,12 @@
         });
       });
     }
-    _createItem(value, label) {
+    _createItem(value, label, options = {}) {
       const div = document.createElement("div");
       div.classList.add("tex-fellow-label", "tex-panel-item", "tex-copy-me");
-      div.dataset.clipboard = value;
+      div.dataset.clipboard = options.clipboard || value;
       div.innerText = label ? `${label} ${value}` : value;
-      div.title = value;
+      div.title = options.title || value;
       return div;
     }
   }
@@ -580,7 +625,7 @@
           }
           const close = document.createElement("span");
           close.classList.add("close");
-          close.title = "Remover item";
+          close.title = TasyI18n.t("recent_feature_remove_title");
           close.innerText = "×";
           close.addEventListener("click", (event) => {
             event.stopPropagation();
@@ -682,7 +727,7 @@
       this.button = document.createElement("button");
       this.button.type = "button";
       this.button.className = "tex-inspect-button";
-      this.button.innerText = "Inspecionar";
+      this.button.innerText = TasyI18n.t("inspect_btn");
       this.button.addEventListener("click", () => this.setInspecting(!this.inspecting));
 
       this.layer = document.createElement("div");
@@ -732,7 +777,7 @@
     }
     setInspecting(inspecting) {
       this.inspecting = inspecting;
-      this.button.innerText = inspecting ? "Cancelar" : "Inspecionar";
+      this.button.innerText = TasyI18n.t(inspecting ? "inspect_btn_cancel" : "inspect_btn");
       this.button.classList.toggle("tex-inspect-button-cancel", inspecting);
       if (!inspecting) {
         this._resetLayer();
@@ -776,14 +821,14 @@
         content.appendChild(contextPre);
         const divider = document.createElement("div");
         divider.className = "tex-scope-context-label";
-        divider.textContent = "escopo AngularJS completo";
+        divider.textContent = TasyI18n.t("scope_full_label");
         content.appendChild(divider);
       } catch (_error) {
         // context block is best-effort - never block the scope view
       }
 
       const pre = document.createElement("pre");
-      pre.innerHTML = scope ? renderScopeJson(scope) : "<em>Nenhum escopo AngularJS encontrado neste elemento.</em>";
+      pre.innerHTML = scope ? renderScopeJson(scope) : `<em>${TasyI18n.t("scope_not_found")}</em>`;
       content.appendChild(pre);
 
       container.append(header, content);
@@ -816,7 +861,7 @@
       );
       return syntaxHighlight(JSON.stringify(plain, null, 2));
     } catch (_error) {
-      return "<em>Não foi possível serializar o escopo deste elemento.</em>";
+      return `<em>${TasyI18n.t("scope_serialize_failed")}</em>`;
     }
   }
 
@@ -851,6 +896,8 @@
       if (Boolean(inspectMode) !== this.inspector.isEnabled()) {
         this.inspector.setEnabled(Boolean(inspectMode));
       }
+      // Also picks up a language-only options update (inspectMode unchanged).
+      this.inspector.button.innerText = TasyI18n.t(this.inspector.inspecting ? "inspect_btn_cancel" : "inspect_btn");
     }
   }
 
@@ -1008,6 +1055,13 @@
     lines.push("");
     lines.push("Dica: as consultas de regras e parâmetros aparecem no Explorador do app server");
     lines.push("(SQL_SQL_GET_COLOR_RULES, SQL_SQL_GET_VISIBILITY_RULE, SQL_SCRIPT_PARAMETERS, OBTER_PARAMETROS_USUARIO).");
+    if (panel && panel.table) {
+      lines.push(
+        "Dica: pra ver quem alterou ou excluiu um registro da tabela `" +
+          panel.table +
+          "`, use Administração do Sistema → Consultas → Log Alteração / Log exclusão."
+      );
+    }
 
     return lines.join("\n");
   }
@@ -1141,12 +1195,12 @@
 
       const header = document.createElement("div");
       header.className = "tex-scope-header tex-layout-header";
-      header.innerHTML = `<div class="tex-scope-title">Layout visual (somente leitura das posições existentes)</div>`;
+      header.innerHTML = `<div class="tex-scope-title">${TasyI18n.t("layout_panel_title")}</div>`;
       makeDraggable(header, overlay);
       const addBtn = document.createElement("button");
       addBtn.type = "button";
       addBtn.className = "tex-layout-add-button";
-      addBtn.innerText = "+ Novo campo";
+      addBtn.innerText = TasyI18n.t("layout_add_field");
       addBtn.addEventListener("click", () => this._addBox(existingFields));
       const close = document.createElement("button");
       close.className = "tex-scope-close";
@@ -1176,9 +1230,10 @@
 
     _addBox(existingFields) {
       const last = existingFields[existingFields.length - 1];
+      const newFieldLabel = TasyI18n.t("layout_new_field_label");
       const field = last
-        ? { left: last.left + last.width + LAYOUT_SNAP, top: last.top, width: 70, height: 17, label: "Novo campo" }
-        : { left: LAYOUT_SNAP, top: LAYOUT_SNAP, width: 70, height: 17, label: "Novo campo" };
+        ? { left: last.left + last.width + LAYOUT_SNAP, top: last.top, width: 70, height: 17, label: newFieldLabel }
+        : { left: LAYOUT_SNAP, top: LAYOUT_SNAP, width: 70, height: 17, label: newFieldLabel };
       const box = this._createBox(field, { editable: true });
       this.canvas.appendChild(box);
     }
@@ -1201,7 +1256,12 @@
         box.style.top = `${state.top * this.scale}px`;
         box.style.width = `${Math.max(state.width * this.scale, 12)}px`;
         box.style.height = `${Math.max(state.height * this.scale, 10)}px`;
-        info.innerText = `Esquerda ${formatBrNumber(state.left)} · Topo ${formatBrNumber(state.top)} · Tamanho ${formatBrNumber(state.width)} · Altura ${formatBrNumber(state.height)}`;
+        info.innerText = TasyI18n.t("layout_info_line", {
+          left: formatBrNumber(state.left),
+          top: formatBrNumber(state.top),
+          width: formatBrNumber(state.width),
+          height: formatBrNumber(state.height)
+        });
       };
       applyGeometry();
 
@@ -1211,14 +1271,19 @@
         const copyBtn = document.createElement("button");
         copyBtn.type = "button";
         copyBtn.className = "tex-layout-copy-button";
-        copyBtn.innerText = "Copiar";
+        copyBtn.innerText = TasyI18n.t("btn_copy");
         copyBtn.addEventListener("click", (event) => {
           event.stopPropagation();
-          const text = `Esquerda: ${formatBrNumber(state.left)}\nTopo: ${formatBrNumber(state.top)}\nTamanho: ${formatBrNumber(state.width)}\nAltura: ${formatBrNumber(state.height)}`;
+          const text = TasyI18n.t("layout_copy_text", {
+            left: formatBrNumber(state.left),
+            top: formatBrNumber(state.top),
+            width: formatBrNumber(state.width),
+            height: formatBrNumber(state.height)
+          });
           navigator.clipboard.writeText(text).catch(() => {});
-          copyBtn.innerText = "Copiado!";
+          copyBtn.innerText = TasyI18n.t("btn_copied");
           window.setTimeout(() => {
-            copyBtn.innerText = "Copiar";
+            copyBtn.innerText = TasyI18n.t("btn_copy");
           }, 700);
         });
         const resizeHandle = document.createElement("div");
@@ -1303,7 +1368,7 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = "tex-layout-button";
-        button.innerText = "📐 Layout visual";
+        button.innerText = TasyI18n.t("layout_visual_btn");
         button.addEventListener("click", () => this.canvas.toggle(headerRow));
         makeDraggable(button, button);
         document.body.appendChild(button);
@@ -1396,7 +1461,7 @@
       const hostname = window.location.hostname.toLowerCase();
       const match = rules.find((rule) => rule.match && hostname.includes(String(rule.match).toLowerCase()));
       const establishment = showEstablishment ? readEstablishment() : "";
-      const nodeSuffix = serverNode && serverNode.node ? ` · nó ${serverNode.node}` : "";
+      const nodeSuffix = serverNode && serverNode.node ? ` · ${TasyI18n.t("env_node_word")} ${serverNode.node}` : "";
       const estabSuffix = establishment ? ` · ${establishment}` : "";
 
       if (!match && !establishment) {
@@ -1635,7 +1700,7 @@
         this.panel = document.createElement("div");
         this.panel.className = "tex-waterfall";
         this.panel.innerHTML =
-          '<div class="tex-waterfall-head">Rede — últimas chamadas <span class="tex-waterfall-close" title="Fechar">×</span></div>' +
+          `<div class="tex-waterfall-head">${TasyI18n.t("waterfall_header")} <span class="tex-waterfall-close" title="${TasyI18n.t("waterfall_close_title")}">×</span></div>` +
           '<div class="tex-waterfall-body"></div>';
         this.panel.querySelector(".tex-waterfall-close").addEventListener("click", () => this.setEnabled(false));
         makeDraggable(this.panel.querySelector(".tex-waterfall-head"), this.panel);
@@ -1655,7 +1720,7 @@
       const calls = apiCallBuffer.slice(-15);
       this.calls = calls;
       if (!calls.length) {
-        body.innerHTML = '<div class="tex-waterfall-empty">Sem chamadas registradas ainda.</div>';
+        body.innerHTML = `<div class="tex-waterfall-empty">${TasyI18n.t("waterfall_empty")}</div>`;
         return;
       }
       const times = calls.map((c) => new Date(c.t).getTime());
@@ -1718,6 +1783,158 @@
     }
   }
 
+  // --- Menu filter: type-to-filter on the long user-menu submenus -----------
+  // (Perfil / Setor / Estabelecimento). Each submenu is a `ul.wpopupmenu` whose
+  // rows live in a direct-child `.wpopupmenu__viewport`. The submenu opens via
+  // an Angular class/ng-show toggle (which plain childList mutations miss and
+  // which may be hover- or click-driven), so this watches class/style/aria
+  // changes across the document and also reacts to header pointer events.
+  function texMenuNorm(text) {
+    return String(text == null ? "" : text)
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "") // strip combining accents
+      .toLowerCase()
+      .trim();
+  }
+
+  class MenuFilterRenderer extends Renderer {
+    constructor() {
+      super();
+      this._enabled = false;
+      this._pending = null;
+      this._observer = new MutationObserver(() => this._schedule());
+      ["click", "mouseover", "focusin"].forEach((evt) =>
+        document.addEventListener(
+          evt,
+          (event) => {
+            if (!this._enabled || !event.target || !event.target.closest) {
+              return;
+            }
+            if (event.target.closest(".tex-menu-filter")) {
+              return;
+            }
+            if (event.target.closest(".wpopupmenu, .w-header, .w-header-option")) {
+              this._schedule();
+            }
+          },
+          true
+        )
+      );
+    }
+    condition() {
+      return false;
+    }
+    _schedule() {
+      if (!this._enabled) {
+        return;
+      }
+      // Rapid triggers (mouse moving over the menu) keep resetting the same
+      // three timers instead of piling up new ones.
+      (this._timers || (this._timers = [])).forEach((id) => window.clearTimeout(id));
+      this._timers = [60, 260, 550].map((delay) => window.setTimeout(() => this._apply(), delay));
+    }
+    render({ menuFilter }) {
+      const on = Boolean(menuFilter);
+      if (on === this._enabled) {
+        if (on) {
+          this._apply();
+        }
+        return;
+      }
+      this._enabled = on;
+      if (on) {
+        try {
+          const scope = document.querySelector(".w-header") || document.body || document.documentElement;
+          this._observer.observe(scope, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ["class", "aria-expanded", "aria-hidden"]
+          });
+        } catch (_error) {
+          // observing can throw in odd states - best effort
+        }
+        this._apply();
+      } else {
+        this._observer.disconnect();
+        document.querySelectorAll(".tex-menu-filter").forEach((el) => el.remove());
+        document.querySelectorAll(".tex-menu-hidden").forEach((el) => el.classList.remove("tex-menu-hidden"));
+      }
+    }
+    _apply() {
+      if (!this._enabled) {
+        return;
+      }
+      try {
+        // Reset filters whose menu is no longer visible (so a reopen starts clean).
+        document.querySelectorAll(".tex-menu-filter").forEach((wrap) => {
+          const host = wrap.closest(".wpopupmenu__viewport");
+          if (host && host.getClientRects().length === 0 && !host.offsetHeight) {
+            const input = wrap.querySelector(".tex-menu-filter-input");
+            if (input && input.value) {
+              input.value = "";
+            }
+            host.querySelectorAll("li.tex-menu-hidden").forEach((li) => li.classList.remove("tex-menu-hidden"));
+          }
+        });
+        document.querySelectorAll(".wpopupmenu").forEach((menu) => {
+          const viewport =
+            menu.querySelector(":scope > .wpopupmenu__viewport") || menu.querySelector(".wpopupmenu__viewport");
+          if (!viewport || viewport.parentElement !== menu) {
+            return;
+          }
+          // Only act on a submenu that is actually visible right now.
+          if (viewport.getClientRects().length === 0 && !viewport.offsetHeight) {
+            return;
+          }
+          const items = [...viewport.querySelectorAll("li")].filter(
+            (li) => li.closest(".wpopupmenu__viewport") === viewport
+          );
+          // Short menus (the parent menu, tiny establishment lists) don't need it.
+          if (items.length < 8) {
+            return;
+          }
+          if (viewport.querySelector(":scope > .tex-menu-filter")) {
+            return;
+          }
+          const wrap = document.createElement("div");
+          wrap.className = "tex-menu-filter";
+          const input = document.createElement("input");
+          input.type = "text";
+          input.className = "tex-menu-filter-input";
+          input.placeholder = TasyI18n.t("menu_filter_placeholder");
+          input.autocomplete = "off";
+          input.spellcheck = false;
+          wrap.appendChild(input);
+          // Keep Tasy's menu from hijacking the keystrokes or closing on click.
+          ["click", "keydown", "keyup", "keypress", "mousedown", "mouseup", "pointerdown"].forEach((evt) =>
+            input.addEventListener(evt, (e) => e.stopPropagation())
+          );
+          input.addEventListener("input", () => {
+            const query = texMenuNorm(input.value);
+            [...viewport.querySelectorAll("li")].forEach((li) => {
+              if (li.closest(".wpopupmenu__viewport") !== viewport) {
+                return;
+              }
+              const match = !query || texMenuNorm(li.textContent).includes(query);
+              li.classList.toggle("tex-menu-hidden", !match);
+            });
+          });
+          viewport.insertBefore(wrap, viewport.firstChild);
+          window.setTimeout(() => {
+            try {
+              input.focus();
+            } catch (_error) {
+              // focus can fail if the menu closed in the meantime
+            }
+          }, 40);
+        });
+      } catch (_error) {
+        // never let a DOM race throw into the observer / listeners
+      }
+    }
+  }
+
   manager.add(new FieldDetailsRenderer());
   manager.add(new GridDetailsRenderer());
   manager.add(new PanelDetailsRenderer());
@@ -1728,6 +1945,7 @@
   manager.add(new EnvironmentIndicatorRenderer());
   manager.add(new ErrorCaptureRenderer());
   manager.add(new WaterfallRenderer());
+  manager.add(new MenuFilterRenderer());
 
   window.addEventListener("message", (event) => {
     if (event.source !== window) {
@@ -1738,7 +1956,12 @@
       return;
     }
     if (data.type === "OPTIONS") {
-      manager.setOptions(data.options);
+      const opts = data.options || {};
+      if (typeof TasyI18n._installStrings === "function" && opts.i18nStrings) {
+        TasyI18n._installStrings(opts.i18nStrings);
+      }
+      TasyI18n.setLang(opts.language);
+      manager.setOptions(opts);
     }
   });
 

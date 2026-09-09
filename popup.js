@@ -7,11 +7,15 @@ const METADATA_OPTION_KEYS = [
   "inspectMode",
   "showReportLayout",
   "showWaterfall",
+  "menuFilter",
   "captureErrors"
 ];
 const TRACE_ACTIVE_KEY = "traceActive";
 const ERROR_LOG_KEY = "errorCaptureLog";
 const APP_SERVER_BASE_KEY = "appServerBaseUrl";
+const LANGUAGE_KEY = "language";
+
+const t = window.TasyI18n.t;
 
 const metadataCheckboxes = Object.fromEntries(
   METADATA_OPTION_KEYS.map((key) => [key, document.getElementById(key)])
@@ -23,10 +27,53 @@ const dictionarySearchEl = document.getElementById("dictionarySearch");
 const dictionaryResultsEl = document.getElementById("dictionaryResults");
 const statusEl = document.getElementById("status");
 
+// --- Language switch (🇧🇷 pt / 🇺🇸 en) ---------------------------------------
+// Translates the fixed UI chrome only (buttons, labels, section titles,
+// status messages) - not generated diagnostic content, tickets or the manual.
+
+const langPtBtn = document.getElementById("langPt");
+const langEnBtn = document.getElementById("langEn");
+
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    el.title = t(el.dataset.i18nTitle);
+  });
+  langPtBtn.classList.toggle("active", window.TasyI18n.getLang() === "pt");
+  langEnBtn.classList.toggle("active", window.TasyI18n.getLang() === "en");
+  setTraceButtonState(toggleTraceBtn.classList.contains("recording"));
+}
+
+async function setLanguage(lang) {
+  window.TasyI18n.setLang(lang);
+  await chrome.storage.local.set({ [LANGUAGE_KEY]: lang });
+  applyI18n();
+  // Re-render every section that builds its own text dynamically so already
+  // open lists/placeholders pick up the new language immediately.
+  renderEnvironmentRules(currentEnvironmentRules);
+  await renderErrorCaptureList();
+  await loadServerNodeInfo();
+  renderExplorerRows();
+}
+
+async function loadLanguage() {
+  const data = await chrome.storage.local.get([LANGUAGE_KEY]);
+  window.TasyI18n.setLang(data[LANGUAGE_KEY] || "pt");
+  applyI18n();
+}
+
+langPtBtn.addEventListener("click", () => void setLanguage("pt"));
+langEnBtn.addEventListener("click", () => void setLanguage("en"));
+
 const DICTIONARY_KIND_LABELS = {
-  field: "Campo",
-  "grid-column": "Coluna de grid",
-  panel: "Painel"
+  field: () => t("dict_kind_field"),
+  "grid-column": () => t("dict_kind_grid_column"),
+  panel: () => t("dict_kind_panel")
 };
 
 function renderDictionaryResults(matches) {
@@ -38,8 +85,8 @@ function renderDictionaryResults(matches) {
   matches.slice(0, 30).forEach((entry) => {
     const row = document.createElement("div");
     row.className = "dictionary-item";
-    const kindLabel = DICTIONARY_KIND_LABELS[entry.kind] || entry.kind;
-    const details = [entry.table, entry.view ? `view ${entry.view}` : null].filter(Boolean).join(" · ");
+    const kindLabel = DICTIONARY_KIND_LABELS[entry.kind] ? DICTIONARY_KIND_LABELS[entry.kind]() : entry.kind;
+    const details = [entry.table, entry.view ? t("dict_view_prefix", { name: entry.view }) : null].filter(Boolean).join(" · ");
     row.innerHTML = `
       <div class="dictionary-item-main">
         <span class="dictionary-item-name">${escapeHtml(entry.name)}</span>
@@ -49,7 +96,7 @@ function renderDictionaryResults(matches) {
     `;
     row.addEventListener("click", () => {
       navigator.clipboard.writeText(entry.name).catch(() => {});
-      setStatus(`"${entry.name}" copiado.`, "ok");
+      setStatus(t("dict_copied", { name: entry.name }), "ok");
     });
     dictionaryResultsEl.appendChild(row);
   });
@@ -89,7 +136,7 @@ function renderEnvironmentRules(rules) {
 
     const matchInput = document.createElement("input");
     matchInput.type = "text";
-    matchInput.placeholder = "ex: hml";
+    matchInput.placeholder = t("env_rule_match_placeholder");
     matchInput.value = rule.match || "";
     matchInput.className = "environment-rule-match";
 
@@ -100,7 +147,7 @@ function renderEnvironmentRules(rules) {
 
     const labelInput = document.createElement("input");
     labelInput.type = "text";
-    labelInput.placeholder = "ex: Homologação";
+    labelInput.placeholder = t("env_rule_label_placeholder");
     labelInput.value = rule.label || "";
     labelInput.className = "environment-rule-label";
 
@@ -108,7 +155,7 @@ function renderEnvironmentRules(rules) {
     removeBtn.type = "button";
     removeBtn.className = "environment-rule-remove";
     removeBtn.innerText = "×";
-    removeBtn.title = "Remover regra";
+    removeBtn.title = t("env_rule_remove_title");
 
     const persist = async () => {
       rule.match = matchInput.value.trim();
@@ -190,7 +237,7 @@ async function getPerformanceTraceLog(limit = 500) {
   return response.log;
 }
 
-// The 7 overlay options shown in the "Metadados TASY" grid (captureErrors lives
+// The overlay options shown in the "Metadados TASY" grid (captureErrors lives
 // in its own section, so it is not part of "Ativar todos").
 const METADATA_UI_KEYS = METADATA_OPTION_KEYS.filter((key) => key !== "captureErrors");
 const metadataToggleAllEl = document.getElementById("metadataToggleAll");
@@ -228,27 +275,27 @@ metadataToggleAllEl.addEventListener("change", async () => {
 });
 
 clearRecentFeaturesBtn.addEventListener("click", async () => {
-  setStatus("Limpando recentes...");
+  setStatus(t("status_clearing_recent"));
   try {
     await chrome.storage.local.set({ recentFeatures: [] });
-    setStatus("Lista de recentes limpa.", "ok");
+    setStatus(t("status_recent_cleared"), "ok");
   } catch (error) {
-    setStatus(`Falha ao limpar recentes: ${error.message || String(error)}`, "error");
+    setStatus(t("status_recent_clear_failed", { msg: error.message || String(error) }), "error");
   }
 });
 
 reloadStylesheetsBtn.addEventListener("click", async () => {
-  setStatus("Recarregando estilos...");
+  setStatus(t("status_reloading_styles"));
   try {
     const tab = await getActiveTab();
     if (!tab || typeof tab.id !== "number") {
-      setStatus("Não foi possível identificar a aba ativa.", "warn");
+      setStatus(t("status_no_active_tab"), "warn");
       return;
     }
     await chrome.runtime.sendMessage({ type: "TASY_RELOAD_STYLESHEETS", tabId: tab.id });
-    setStatus("Estilos recarregados.", "ok");
+    setStatus(t("status_styles_reloaded"), "ok");
   } catch (error) {
-    setStatus(`Falha ao recarregar estilos: ${error.message || String(error)}`, "error");
+    setStatus(t("status_reload_failed", { msg: error.message || String(error) }), "error");
   }
 });
 
@@ -294,6 +341,10 @@ function escapeHtml(text) {
     .replace(/"/g, "&quot;");
 }
 
+// Note: the two HTML reports below (process trace + captured errors) are
+// downloadable files meant to be attached to a support ticket, same as the
+// ticket generator's output - they stay in Portuguese regardless of the UI
+// language, matching the destination system's own language.
 function buildHtmlReport(entries) {
   const generatedAt = new Date().toLocaleString("pt-BR");
   const steps = entries
@@ -382,7 +433,7 @@ function downloadHtmlReport(html, filenameSuffix) {
 }
 
 function setTraceButtonState(active) {
-  toggleTraceBtn.textContent = active ? "Parar registro" : "Iniciar registro";
+  toggleTraceBtn.textContent = active ? t("btn_stop_recording") : t("btn_start_recording");
   toggleTraceBtn.classList.toggle("recording", active);
 }
 
@@ -398,13 +449,13 @@ toggleTraceBtn.addEventListener("click", async () => {
   if (!isActive) {
     await chrome.storage.local.set({ [TRACE_ACTIVE_KEY]: true, performanceTraceLog: [], traceScreenshots: {} });
     setTraceButtonState(true);
-    setStatus("Registro iniciado. Execute o processo no TASY normalmente.", "ok");
+    setStatus(t("status_recording_started"), "ok");
     return;
   }
 
   await chrome.storage.local.set({ [TRACE_ACTIVE_KEY]: false });
   setTraceButtonState(false);
-  setStatus("Finalizando registro...");
+  setStatus(t("status_finishing_recording"));
 
   const activeTab = await getActiveTab();
 
@@ -428,7 +479,7 @@ toggleTraceBtn.addEventListener("click", async () => {
 
   try {
     if (!activeTab || typeof activeTab.id !== "number") {
-      setStatus("Não foi possível identificar a aba ativa para copiar o registro.", "warn");
+      setStatus(t("status_no_active_tab_copy"), "warn");
       return;
     }
 
@@ -436,13 +487,13 @@ toggleTraceBtn.addEventListener("click", async () => {
     const activeTabLog = log.filter((entry) => Number(entry?.tabId) === Number(activeTab.id));
 
     if (activeTabLog.length === 0) {
-      setStatus("Registro finalizado. Nenhum evento foi registrado.", "warn");
+      setStatus(t("status_recording_empty"), "warn");
       return;
     }
 
     const lines = activeTabLog.map(formatTraceEntry).filter(Boolean);
     if (lines.length === 0) {
-      setStatus("Registro finalizado. Nenhum evento relevante foi registrado.", "warn");
+      setStatus(t("status_recording_empty_relevant"), "warn");
       return;
     }
 
@@ -451,9 +502,9 @@ toggleTraceBtn.addEventListener("click", async () => {
     const filenameSuffix = new Date().toISOString().replace(/[:.]/g, "-");
     downloadHtmlReport(buildHtmlReport(activeTabLog), filenameSuffix);
 
-    setStatus(`Registro copiado e relatório baixado (${lines.length} evento(s)).`, "ok");
+    setStatus(t("status_recording_done", { count: lines.length }), "ok");
   } catch (error) {
-    setStatus(`Falha ao copiar registro: ${error.message || String(error)}`, "error");
+    setStatus(t("status_recording_copy_failed", { msg: error.message || String(error) }), "error");
   }
 });
 
@@ -491,10 +542,10 @@ async function resolveAppServerBaseForTest() {
 }
 
 testAppServerBtn.addEventListener("click", async () => {
-  setStatus("Testando acesso ao app server...");
+  setStatus(t("status_testing_access"));
   const base = await resolveAppServerBaseForTest();
   if (!base) {
-    setStatus("Abra o TASY na aba ativa ou preencha a URL do app server.", "warn");
+    setStatus(t("status_open_tasy_or_url"), "warn");
     return;
   }
   try {
@@ -503,14 +554,14 @@ testAppServerBtn.addEventListener("click", async () => {
       url: `${base}wheb_arquivo.jsp?t=1&_=${Date.now()}`
     });
     if (resp && resp.ok && !resp.looksLikeLogin) {
-      setStatus(`Acesso OK: ${base}`, "ok");
+      setStatus(t("status_access_ok", { base }), "ok");
     } else if (resp && resp.looksLikeLogin) {
-      setStatus("Precisa de login: abra o console do app server uma vez no navegador.", "warn");
+      setStatus(t("status_needs_login"), "warn");
     } else {
-      setStatus(`Sem acesso a ${base} — confira a URL.`, "error");
+      setStatus(t("status_no_access", { base }), "error");
     }
   } catch (error) {
-    setStatus(`Falha no teste: ${error.message || String(error)}`, "error");
+    setStatus(t("status_test_failed", { msg: error.message || String(error) }), "error");
   }
 });
 
@@ -524,7 +575,7 @@ async function renderErrorCaptureList() {
   errorCaptureListEl.innerHTML = "";
   if (list.length === 0) {
     errorCaptureListEl.innerHTML =
-      '<div class="dictionary-item"><div class="dictionary-item-meta">Nenhum erro capturado ainda.</div></div>';
+      `<div class="dictionary-item"><div class="dictionary-item-meta">${escapeHtml(t("no_errors_yet"))}</div></div>`;
     return;
   }
   list
@@ -542,7 +593,7 @@ async function renderErrorCaptureList() {
       const screen = record.screen
         ? record.screen.caption || record.screen.name || (record.screen.code ? `[${record.screen.code}]` : "")
         : "";
-      const signature = record.interpretation ? record.interpretation.signature : "Erro";
+      const signature = record.interpretation ? record.interpretation.signature : t("error_fallback_label");
       const repeat = record.repeat && record.repeat.countToday > 1 ? ` · ×${record.repeat.countToday} hoje` : "";
       row.innerHTML = `
         <div class="dictionary-item-main">
@@ -553,7 +604,7 @@ async function renderErrorCaptureList() {
       `;
       row.addEventListener("click", () => {
         navigator.clipboard.writeText(record.reportText || "").catch(() => {});
-        setStatus("Relatório do erro copiado.", "ok");
+        setStatus(t("error_report_copied"), "ok");
       });
       errorCaptureListEl.appendChild(row);
     });
@@ -595,7 +646,7 @@ ${blocks}
 downloadErrorsBtn.addEventListener("click", async () => {
   const list = await getErrorCaptureLog();
   if (list.length === 0) {
-    setStatus("Nenhum erro capturado para exportar.", "warn");
+    setStatus(t("status_no_errors_export"), "warn");
     return;
   }
   const blob = new Blob([buildErrorHtmlReport(list)], { type: "text/html" });
@@ -607,13 +658,13 @@ downloadErrorsBtn.addEventListener("click", async () => {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  setStatus(`Relatório de erros baixado (${list.length}).`, "ok");
+  setStatus(t("status_errors_downloaded", { count: list.length }), "ok");
 });
 
 clearErrorsBtn.addEventListener("click", async () => {
   await chrome.storage.local.set({ [ERROR_LOG_KEY]: [] });
   await renderErrorCaptureList();
-  setStatus("Erros capturados apagados.", "ok");
+  setStatus(t("status_errors_cleared"), "ok");
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -647,12 +698,15 @@ async function getServerNode() {
 async function loadServerNodeInfo() {
   const node = await getServerNode();
   serverNodeInfoEl.textContent = node
-    ? `Servidor atual: nó ${node.node}  (cookie ${node.name})`
-    : "Servidor atual: nó não identificado nesta aba.";
+    ? t("server_node_known", { node: node.node, name: node.name })
+    : t("server_node_unknown");
 }
 
+// Note: the ticket text itself (fields, labels) stays in Portuguese - it's
+// content meant to go into the team's own (Portuguese-language) ticketing
+// system, same reasoning as the two HTML reports above.
 async function generateTicket() {
-  setStatus("Montando texto do chamado...");
+  setStatus(t("status_building_ticket"));
   const tab = await getActiveTab();
   let host = "?";
   try {
@@ -698,7 +752,7 @@ async function generateTicket() {
   L.push("(Revise este texto antes de enviar — pode conter dados sensíveis.)");
 
   ticketOutputEl.value = L.join("\n");
-  setStatus("Texto do chamado gerado. Revise e copie.", "ok");
+  setStatus(t("status_ticket_generated"), "ok");
 }
 
 genTicketBtn.addEventListener("click", () => {
@@ -707,14 +761,14 @@ genTicketBtn.addEventListener("click", () => {
 
 copyTicketBtn.addEventListener("click", async () => {
   if (!ticketOutputEl.value.trim()) {
-    setStatus("Gere o texto primeiro.", "warn");
+    setStatus(t("status_generate_first"), "warn");
     return;
   }
   try {
     await navigator.clipboard.writeText(ticketOutputEl.value);
-    setStatus("Texto do chamado copiado.", "ok");
+    setStatus(t("status_ticket_copied"), "ok");
   } catch (error) {
-    setStatus("Falha ao copiar: " + (error.message || String(error)), "error");
+    setStatus(t("status_copy_failed", { msg: error.message || String(error) }), "error");
   }
 });
 
@@ -769,7 +823,7 @@ function renderExplorerRows() {
   const rows = explorerEntries.filter((e) => !filter || e.name.toLowerCase().includes(filter));
   explorerListEl.innerHTML = "";
   if (rows.length === 0) {
-    explorerHint(explorerEntries.length ? "Nenhum arquivo bate com o filtro." : "Clique em \"Atualizar lista\".");
+    explorerHint(explorerEntries.length ? t("explorer_no_match_filter") : t("explorer_click_refresh"));
     return;
   }
   rows.slice(0, 60).forEach((entry) => {
@@ -791,7 +845,7 @@ function renderExplorerRows() {
 }
 
 async function openExplorerFile(entry) {
-  explorerDetailEl.value = "Carregando...";
+  explorerDetailEl.value = t("explorer_loading");
   let url;
   try {
     url = new URL(entry.href, explorerBase).href;
@@ -803,19 +857,19 @@ async function openExplorerFile(entry) {
       type: "TASY_APPSERVER_FETCH",
       url: url + (url.includes("?") ? "&" : "?") + "_=" + Date.now()
     });
-    explorerDetailEl.value = resp && resp.ok ? extractSqlText(resp.body) : "Não foi possível abrir o arquivo.";
+    explorerDetailEl.value = resp && resp.ok ? extractSqlText(resp.body) : t("explorer_open_failed");
   } catch (error) {
-    explorerDetailEl.value = "Erro: " + (error.message || String(error));
+    explorerDetailEl.value = t("explorer_error_prefix", { msg: error.message || String(error) });
   }
 }
 
 async function loadAppServerExplorer() {
-  setStatus("Lendo o app server...");
-  explorerHint("Carregando...");
+  setStatus(t("status_reading_appserver"));
+  explorerHint(t("explorer_loading"));
   const tab = await getActiveTab();
   explorerBase = await resolveAppServerBaseForTest();
   if (!tab || !tab.id || !explorerBase) {
-    explorerHint("Abra o TASY na aba ativa (ou preencha a URL do app server em \"Capturar erros\").");
+    explorerHint(t("explorer_open_tasy_or_url"));
     setStatus("");
     return;
   }
@@ -827,7 +881,7 @@ async function loadAppServerExplorer() {
     user = "";
   }
   if (!user) {
-    explorerHint("Não identifiquei seu usuário — verifique se está logado no TASY nesta aba.");
+    explorerHint(t("explorer_no_user"));
     setStatus("");
     return;
   }
@@ -837,15 +891,15 @@ async function loadAppServerExplorer() {
       url: explorerBase + "wheb_arquivo.jsp?user=" + encodeURIComponent(user) + "&t=1&_=" + Date.now()
     });
     if (!resp || !resp.ok || resp.looksLikeLogin) {
-      explorerHint(resp && resp.looksLikeLogin ? "Precisa de login no console do app server." : "Sem acesso ao app server.");
+      explorerHint(resp && resp.looksLikeLogin ? t("explorer_needs_login") : t("explorer_no_access"));
       setStatus("");
       return;
     }
     explorerEntries = parseAppServerFolderHtml(resp.body).filter((e) => /^(SQL_|PROCEDURE_|W_PROCEDURE_|ERRO_)/i.test(e.name));
     renderExplorerRows();
-    setStatus(`Explorador: ${explorerEntries.length} arquivo(s) de ${user}.`, "ok");
+    setStatus(t("status_explorer_files", { count: explorerEntries.length, user }), "ok");
   } catch (error) {
-    explorerHint("Erro: " + (error.message || String(error)));
+    explorerHint(t("explorer_error_prefix", { msg: error.message || String(error) }));
     setStatus("");
   }
 }
@@ -856,19 +910,20 @@ explorerRefreshBtn.addEventListener("click", () => {
 explorerFilterEl.addEventListener("input", renderExplorerRows);
 explorerCopyBtn.addEventListener("click", async () => {
   if (!explorerDetailEl.value.trim()) {
-    setStatus("Selecione um arquivo primeiro.", "warn");
+    setStatus(t("status_select_file_first"), "warn");
     return;
   }
   try {
     await navigator.clipboard.writeText(explorerDetailEl.value);
-    setStatus("Conteúdo copiado.", "ok");
+    setStatus(t("status_content_copied"), "ok");
   } catch (error) {
-    setStatus("Falha ao copiar: " + (error.message || String(error)), "error");
+    setStatus(t("status_copy_failed", { msg: error.message || String(error) }), "error");
   }
 });
 
 (async () => {
   try {
+    await loadLanguage();
     await loadMetadataOptions();
     await loadTraceState();
     await loadEnvironmentRules();
@@ -876,7 +931,7 @@ explorerCopyBtn.addEventListener("click", async () => {
     await loadAppServerBase();
     await renderErrorCaptureList();
     await loadServerNodeInfo();
-    explorerHint("Clique em \"Atualizar lista\".");
+    explorerHint(t("explorer_click_refresh"));
   } catch (error) {
     setStatus(error.message || String(error), "error");
   }

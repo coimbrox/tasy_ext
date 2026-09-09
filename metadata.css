@@ -579,3 +579,37 @@
 .tex-waterfall-row.slow .tex-waterfall-ms {
   color: #FBBF24;
 }
+
+/* --- Menu filter: type-to-filter box on the long user-menu submenus ------- */
+.tex-menu-filter {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  box-sizing: border-box;
+  padding: 6px;
+  background: #F1F5F9;
+  border-bottom: 1px solid #CBD5E1;
+}
+
+.tex-menu-filter-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 8px;
+  border: 1px solid #94A3B8;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #0F172A;
+  background: #FFFFFF;
+  outline: none;
+}
+
+.tex-menu-filter-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+li.tex-menu-hidden {
+  display: none !important;
+}

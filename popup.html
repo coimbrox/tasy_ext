@@ -11,141 +11,150 @@
       <div class="header">
         <img src="icon.png" alt="Logo" class="logo" />
         <h1>Tasy DevTools</h1>
-        <a href="manual.html" target="_blank" class="manual-link" title="Ver manual da extensão">📖 Manual</a>
+        <div class="lang-switch" id="langSwitch" title="Idioma da extensão" data-i18n-title="lang_toggle_title">
+          <button type="button" id="langPt" class="lang-flag" data-lang="pt" title="Português">🇧🇷</button>
+          <button type="button" id="langEn" class="lang-flag" data-lang="en" title="English">🇺🇸</button>
+        </div>
+        <a href="manual.html" target="_blank" class="manual-link" title="Ver manual da extensão" data-i18n-title="popup_manual_title" data-i18n="popup_manual_link">📖 Manual</a>
       </div>
 
-      <div class="section-title">Dicionário de dados</div>
+      <div class="section-title" data-i18n="section_dictionary">Dicionário de dados</div>
 
       <div class="field">
-        <input id="dictionarySearch" type="text" placeholder="Buscar campo, coluna ou tabela..." autocomplete="off" />
+        <input id="dictionarySearch" type="text" placeholder="Buscar campo, coluna ou tabela..." data-i18n-placeholder="dictionary_search_placeholder" autocomplete="off" />
         <div id="dictionaryResults" class="dictionary-results"></div>
       </div>
 
-      <div class="section-title">Metadados TASY</div>
+      <div class="section-title" data-i18n="section_metadata">Metadados TASY</div>
 
       <label class="checkbox-label" id="metadataToggleAllRow">
         <input id="metadataToggleAll" type="checkbox" />
-        <strong>Ativar todos</strong>
+        <strong data-i18n="toggle_all">Ativar todos</strong>
       </label>
 
       <div class="field metadata-grid">
         <label class="checkbox-label">
           <input id="showFieldDetails" type="checkbox" />
-          Detalhes de campo
+          <span data-i18n="opt_field_details">Detalhes de campo</span>
         </label>
         <label class="checkbox-label">
           <input id="showGridDetails" type="checkbox" />
-          Detalhes de grid
+          <span data-i18n="opt_grid_details">Detalhes de grid</span>
         </label>
         <label class="checkbox-label">
           <input id="showPanelDetails" type="checkbox" />
-          Detalhes de painel
+          <span data-i18n="opt_panel_details">Detalhes de painel</span>
         </label>
         <label class="checkbox-label">
           <input id="showRecentFeatures" type="checkbox" />
-          Recentes (tela inicial)
+          <span data-i18n="opt_recent_features">Recentes (tela inicial)</span>
         </label>
         <label class="checkbox-label">
           <input id="showUserLocale" type="checkbox" />
-          Idioma do usuário no rodapé
+          <span data-i18n="opt_user_locale">Idioma do usuário no rodapé</span>
         </label>
         <label class="checkbox-label">
           <input id="inspectMode" type="checkbox" />
-          Modo inspeção
+          <span data-i18n="opt_inspect_mode">Modo inspeção</span>
         </label>
         <label class="checkbox-label">
           <input id="showReportLayout" type="checkbox" />
-          Layout visual (relatórios)
+          <span data-i18n="opt_report_layout">Layout visual (relatórios)</span>
         </label>
         <label class="checkbox-label">
           <input id="showWaterfall" type="checkbox" />
-          Waterfall de rede
+          <span data-i18n="opt_waterfall">Waterfall de rede</span>
+        </label>
+        <label class="checkbox-label">
+          <input id="menuFilter" type="checkbox" />
+          <span data-i18n="opt_menu_filter">Filtro nos menus (Perfil/Setor)</span>
         </label>
       </div>
 
       <div class="actions">
-        <button id="clearRecentFeaturesBtn" type="button">Limpar recentes</button>
-        <button id="reloadStylesheetsBtn" type="button">Recarregar estilos</button>
+        <button id="clearRecentFeaturesBtn" type="button" data-i18n="btn_clear_recent">Limpar recentes</button>
+        <button id="reloadStylesheetsBtn" type="button" data-i18n="btn_reload_styles">Recarregar estilos</button>
       </div>
 
-      <div class="section-title">Cores por ambiente</div>
+      <div class="section-title" data-i18n="section_env_colors">Cores por ambiente</div>
 
       <div class="field">
-        <p class="trace-hint">Identifique visualmente em qual ambiente você está: quando o domínio da aba contém o texto abaixo, a extensão mostra uma borda e uma etiqueta na cor escolhida.</p>
+        <p class="trace-hint" data-i18n="env_hint">Identifique visualmente em qual ambiente você está: quando o domínio da aba contém o texto abaixo, a extensão mostra uma borda e uma etiqueta na cor escolhida.</p>
         <div id="environmentRulesList" class="environment-rules-list"></div>
         <div class="actions">
-          <button id="addEnvironmentRuleBtn" type="button">+ Adicionar regra</button>
+          <button id="addEnvironmentRuleBtn" type="button" data-i18n="btn_add_env_rule">+ Adicionar regra</button>
         </div>
         <label class="checkbox-label">
           <input id="showEstablishment" type="checkbox" />
-          Mostrar o estabelecimento logado na etiqueta (matriz/filial)
+          <span data-i18n="opt_show_establishment">Mostrar o estabelecimento logado na etiqueta (matriz/filial)</span>
         </label>
-        <p class="trace-hint">Útil em instalações multi-estabelecimento. Se não houver regra de cor para o domínio, mostra uma etiqueta cinza só com o estabelecimento.</p>
+        <p class="trace-hint" data-i18n="establishment_hint">Útil em instalações multi-estabelecimento. Se não houver regra de cor para o domínio, mostra uma etiqueta cinza só com o estabelecimento.</p>
       </div>
 
-      <div class="section-title">Registrar Processo</div>
+      <div class="section-title" data-i18n="section_register_process">Registrar Processo</div>
 
       <div class="field">
-        <p class="trace-hint">Inicie antes de executar o processo que quer documentar (ex.: criar um usuário). Ao parar, o passo a passo é copiado automaticamente e um relatório em HTML (com prints de cada passo) é baixado — pronto para anexar num chamado.</p>
+        <p class="trace-hint" data-i18n="register_hint">Inicie antes de executar o processo que quer documentar (ex.: criar um usuário). Ao parar, o passo a passo é copiado automaticamente e um relatório em HTML (com prints de cada passo) é baixado — pronto para anexar num chamado.</p>
         <div class="actions">
-          <button id="toggleTraceBtn" type="button" class="primary">Iniciar registro</button>
+          <button id="toggleTraceBtn" type="button" class="primary" data-i18n="btn_start_recording">Iniciar registro</button>
         </div>
       </div>
 
-      <div class="section-title">Capturar erros</div>
+      <div class="section-title" data-i18n="section_capture_errors">Capturar erros</div>
 
       <div class="field">
-        <p class="trace-hint">Ligue e esqueça. Quando o TASY mostrar "Houve um erro na execução da aplicação", a extensão lê o detalhe no app server, explica em linguagem simples o que aconteceu e em qual processo, e mostra um botão "Copiar relatório" pronto pro chamado.</p>
+        <p class="trace-hint" data-i18n="capture_errors_hint">Ligue e esqueça. Quando o TASY mostrar "Houve um erro na execução da aplicação", a extensão lê o detalhe no app server, explica em linguagem simples o que aconteceu e em qual processo, e mostra um botão "Copiar relatório" pronto pro chamado.</p>
         <label class="checkbox-label">
           <input id="captureErrors" type="checkbox" />
-          Capturar e explicar erros do TASY
+          <span data-i18n="opt_capture_errors">Capturar e explicar erros do TASY</span>
         </label>
-        <input id="appServerBaseUrl" type="text" placeholder="URL do app server (vazio = automático)" autocomplete="off" />
+        <input id="appServerBaseUrl" type="text" placeholder="URL do app server (vazio = automático)" data-i18n-placeholder="appserver_url_placeholder" autocomplete="off" />
         <div class="actions">
-          <button id="testAppServerBtn" type="button">Testar acesso</button>
-          <button id="downloadErrorsBtn" type="button">Baixar relatório</button>
-          <button id="clearErrorsBtn" type="button">Limpar</button>
+          <button id="testAppServerBtn" type="button" data-i18n="btn_test_access">Testar acesso</button>
+          <button id="downloadErrorsBtn" type="button" data-i18n="btn_download_report">Baixar relatório</button>
+          <button id="clearErrorsBtn" type="button" data-i18n="btn_clear">Limpar</button>
         </div>
         <div id="errorCaptureList" class="dictionary-results"></div>
         <p id="serverNodeInfo" class="trace-hint"></p>
       </div>
 
-      <div class="section-title">Gerar chamado</div>
+      <div class="section-title" data-i18n="section_generate_ticket">Gerar chamado</div>
 
       <div class="field">
-        <p class="trace-hint">Monta o texto do chamado com ambiente, servidor, versão, função, passos (do Registrar Processo) e o último erro capturado. Edite e copie.</p>
-        <input id="ticketEsperado" type="text" placeholder="O que deveria acontecer (esperado)" autocomplete="off" />
-        <input id="ticketObtido" type="text" placeholder="O que aconteceu (obtido)" autocomplete="off" />
+        <p class="trace-hint" data-i18n="ticket_hint">Monta o texto do chamado com ambiente, servidor, versão, função, passos (do Registrar Processo) e o último erro capturado. Edite e copie.</p>
+        <input id="ticketEsperado" type="text" placeholder="O que deveria acontecer (esperado)" data-i18n-placeholder="ticket_expected_placeholder" autocomplete="off" />
+        <input id="ticketObtido" type="text" placeholder="O que aconteceu (obtido)" data-i18n-placeholder="ticket_obtained_placeholder" autocomplete="off" />
         <div class="actions">
-          <button id="genTicketBtn" type="button" class="primary">Gerar texto</button>
-          <button id="copyTicketBtn" type="button">Copiar</button>
+          <button id="genTicketBtn" type="button" class="primary" data-i18n="btn_generate_text">Gerar texto</button>
+          <button id="copyTicketBtn" type="button" data-i18n="btn_copy">Copiar</button>
         </div>
-        <textarea id="ticketOutput" rows="10" placeholder="O texto do chamado aparece aqui." spellcheck="false"></textarea>
+        <textarea id="ticketOutput" rows="10" placeholder="O texto do chamado aparece aqui." data-i18n-placeholder="ticket_output_placeholder" spellcheck="false"></textarea>
       </div>
 
-      <div class="section-title">Explorador do app server</div>
+      <div class="section-title" data-i18n="section_explorer">Explorador do app server</div>
 
       <div class="field">
-        <p class="trace-hint">Lista os arquivos de trace recentes do seu usuário no app server (consultas SQL, procedures e erros). Clique num item para ver o conteúdo e copiar.</p>
+        <p class="trace-hint" data-i18n="explorer_hint">Lista os arquivos de trace recentes do seu usuário no app server (consultas SQL, procedures e erros). Clique num item para ver o conteúdo e copiar.</p>
         <div class="actions">
-          <button id="explorerRefreshBtn" type="button">Atualizar lista</button>
+          <button id="explorerRefreshBtn" type="button" data-i18n="btn_refresh_list">Atualizar lista</button>
         </div>
-        <input id="explorerFilter" type="text" placeholder="Filtrar por nome (ex.: PERFIL, GERAR, ERRO)" autocomplete="off" />
+        <input id="explorerFilter" type="text" placeholder="Filtrar por nome (ex.: PERFIL, GERAR, ERRO)" data-i18n-placeholder="explorer_filter_placeholder" autocomplete="off" />
         <div id="explorerList" class="dictionary-results"></div>
-        <textarea id="explorerDetail" rows="10" placeholder="Conteúdo do arquivo selecionado." spellcheck="false" readonly></textarea>
+        <textarea id="explorerDetail" rows="10" placeholder="Conteúdo do arquivo selecionado." data-i18n-placeholder="explorer_detail_placeholder" spellcheck="false" readonly></textarea>
         <div class="actions">
-          <button id="explorerCopyBtn" type="button">Copiar conteúdo</button>
+          <button id="explorerCopyBtn" type="button" data-i18n="btn_copy_content">Copiar conteúdo</button>
         </div>
       </div>
 
       <p id="status" class="status"></p>
 
       <div class="popup-footer">
-        <a href="manual.html#apoie" target="_blank">☕ Apoie o projeto</a>
-        <a href="manual.html#contato" target="_blank">💬 Sugestões e contato</a>
+        <a href="manual.html#apoie" target="_blank" data-i18n="footer_support">☕ Apoie o projeto</a>
+        <a href="manual.html#contato" target="_blank" data-i18n="footer_contact">💬 Sugestões e contato</a>
       </div>
     </main>
 
+    <script src="i18n.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

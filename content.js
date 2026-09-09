@@ -3,6 +3,16 @@ const PERFORMANCE_POLL_INTERVAL_MS = 8000;
 const PERFORMANCE_TIMEOUT_MS = 4500;
 const TRACE_ACTIVE_KEY = "traceActive";
 
+// i18n.js loads before this file in the same content_scripts entry and sets
+// window.TasyI18n; fall back to a key-echoing stub if it ever isn't there, so
+// the metadata relay and error panel never break over a missing translation.
+const TasyI18n = (typeof window !== "undefined" && window.TasyI18n) || {
+  t: (key) => key,
+  setLang: () => {},
+  getLang: () => "pt",
+  STRINGS: {}
+};
+
 let performanceSamples = [];
 let performanceFailures = 0;
 let performanceStatus = "normal";
@@ -366,6 +376,7 @@ const METADATA_OPTION_KEYS = [
   "inspectMode",
   "showReportLayout",
   "showWaterfall",
+  "menuFilter",
   "captureErrors"
 ];
 const RECENT_FEATURES_KEY = "recentFeatures";
@@ -374,6 +385,7 @@ const DATA_DICTIONARY_KEY = "dataDictionary";
 const DATA_DICTIONARY_MAX_ENTRIES = 3000;
 const ENVIRONMENT_RULES_KEY = "environmentRules";
 const SHOW_ESTABLISHMENT_KEY = "showEstablishment";
+const LANGUAGE_KEY = "language";
 
 // Which app-server cluster node this session is pinned to (from the affinity
 // cookie, read by the background via chrome.cookies). Loaded once; surfaced in
@@ -404,7 +416,8 @@ async function sendMetadataOptions() {
     ...METADATA_OPTION_KEYS,
     RECENT_FEATURES_KEY,
     ENVIRONMENT_RULES_KEY,
-    SHOW_ESTABLISHMENT_KEY
+    SHOW_ESTABLISHMENT_KEY,
+    LANGUAGE_KEY
   ]);
   const options = {};
   METADATA_OPTION_KEYS.forEach((key) => {
@@ -414,6 +427,13 @@ async function sendMetadataOptions() {
   options.environmentRules = Array.isArray(data[ENVIRONMENT_RULES_KEY]) ? data[ENVIRONMENT_RULES_KEY] : [];
   options.serverNode = serverNodeInfo ? { name: serverNodeInfo.name, node: serverNodeInfo.node } : null;
   options.showEstablishment = Boolean(data[SHOW_ESTABLISHMENT_KEY]);
+  options.language = data[LANGUAGE_KEY] === "en" ? "en" : "pt";
+  // Ship the string table to the MAIN-world script too - it can't always rely
+  // on its own copy of i18n.js having loaded there.
+  options.i18nStrings = (window.TasyI18n && window.TasyI18n.STRINGS) || TasyI18n.STRINGS || null;
+
+  // This script's own UI (the error panel below) reads TasyI18n directly too.
+  TasyI18n.setLang(options.language);
 
   window.postMessage({ [METADATA_MSG_MARK]: true, type: "OPTIONS", options }, "*");
 }
@@ -801,6 +821,36 @@ function interpretErrorClass({ text, version }) {
       checks: ["Identificar o objeto pelo stack do app server abaixo.", "Costuma exigir ajuste na customização ou chamado TOTVS."]
     },
     {
+      re: /certificateexpired|certificatenotyetvalid|pkix path|sslhandshake|keystore|certificado (digital )?(vencid|expirad|inv[aá]lid)|assinatura digital|invalid signature|chave privada|certpathvalidator/i,
+      signature: "Certificado digital vencido ou inválido",
+      what: "O processo depende de um certificado digital (usado em NF-e, NFS-e, SPED-Reinf ou na assinatura de relatórios) que está vencido, ausente ou mal configurado.",
+      causes: [
+        "Certificado cadastrado no Tasy venceu.",
+        "Arquivo do certificado não está mais no caminho configurado, ou a senha cadastrada mudou.",
+        "Certificado cadastrado para a finalidade errada (NF-e/NFS-e/SPED) ou para outro estabelecimento."
+      ],
+      checks: [
+        "Abrir Gerenciador de Certificado Digital → aba Certificado digital → sub-aba Detalhes do certificado digital, e conferir a data de vencimento.",
+        "Na aba Configurações, conferir se o aviso de vencimento está com antecedência suficiente para não pegar de surpresa.",
+        "Se vencido, renovar o certificado com a autoridade certificadora e recadastrar o arquivo/senha."
+      ]
+    },
+    {
+      re: /n[ãa]o (possui|tem) (acesso|permiss[ãa]o)|sem permiss[ãa]o|access (is )?denied|not authorized|unauthorized|forbidden|fun[çc][ãa]o n[ãa]o liberada|perfil n[ãa]o (tem|possui) acesso|insufficient privileges|ORA-01031/i,
+      signature: "Acesso ou permissão negada",
+      what: "O usuário/perfil não tem permissão para executar esta ação, acessar esta função ou este paciente/atendimento.",
+      causes: [
+        "Função não liberada para o perfil do usuário.",
+        "Perfil sem acesso a um componente/tabela específico dentro da função.",
+        "Regra de Controle de Acesso (privacidade) bloqueando este atendimento/paciente para o perfil."
+      ],
+      checks: [
+        "Administração do Sistema → Perfis → Cadastro → Funções: conferir se a função está liberada para o perfil do usuário.",
+        "Controle de Acesso → Consulta: testar diretamente se o estabelecimento/setor/perfil/usuário tem acesso a este atendimento/paciente.",
+        "Se for um componente específico da tela (não a função inteira), ver Administração do Sistema → Configurações de Utilização, filtrando pela função."
+      ]
+    },
+    {
       re: /NullPointerException|java\.[\w.]+Exception(?!.*SQLException)|at com\.philips\.tasy/i,
       signature: "Falha na camada Java do servidor de aplicação",
       what: "O processo do lado servidor (Wheb) abortou por um erro no código Java — não é erro de banco.",
@@ -1110,19 +1160,20 @@ function showErrorPanel(record) {
   const title = document.createElement("div");
   title.className = "tex-scope-title";
   title.innerText =
-    "Erro capturado — " +
+    TasyI18n.t("err_captured_prefix") +
+    " — " +
     record.interpretation.signature +
-    (record.repeat && record.repeat.countToday > 1 ? "  (×" + record.repeat.countToday + " hoje)" : "");
+    (record.repeat && record.repeat.countToday > 1 ? TasyI18n.t("err_repeat_suffix", { count: record.repeat.countToday }) : "");
 
   const copyBtn = document.createElement("button");
   copyBtn.type = "button";
   copyBtn.className = "tex-error-copy";
-  copyBtn.innerText = "Copiar relatório";
+  copyBtn.innerText = TasyI18n.t("btn_copy_report");
   copyBtn.addEventListener("click", () => {
     navigator.clipboard.writeText(record.reportText || buildErrorReportText(record)).then(
       () => {
-        copyBtn.innerText = "Copiado!";
-        window.setTimeout(() => { copyBtn.innerText = "Copiar relatório"; }, 900);
+        copyBtn.innerText = TasyI18n.t("btn_copied");
+        window.setTimeout(() => { copyBtn.innerText = TasyI18n.t("btn_copy_report"); }, 900);
       },
       () => {}
     );
@@ -1204,7 +1255,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     return;
   }
 
-  const relevantKeys = [...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY, ENVIRONMENT_RULES_KEY, SHOW_ESTABLISHMENT_KEY];
+  const relevantKeys = [...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY, ENVIRONMENT_RULES_KEY, SHOW_ESTABLISHMENT_KEY, LANGUAGE_KEY];
   if (relevantKeys.some((key) => key in changes)) {
     void sendMetadataOptions();
   }

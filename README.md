@@ -8,6 +8,10 @@ Funciona em qualquer ambiente TASY cujo domínio contenha "tasy" no hostname (ex
 
 Um link **📖 Manual** no topo do popup abre uma página explicando todas as funcionalidades abaixo em detalhe.
 
+### Idioma da extensão 🇧🇷 / 🇺🇸
+
+Duas bandeiras no topo do popup (🇧🇷/🇺🇸) trocam o idioma da interface fixa — popup, badges, botões e painéis injetados na tela do TASY — entre português e inglês; a escolha fica salva. Conteúdo gerado (causas/verificações de erro, texto de chamado, relatórios HTML baixados) continua em português, já que se destina a sistemas/times internos.
+
 ### Dicionário de dados
 
 Enquanto você navega pelo TASY com os overlays de **Detalhes de campo**/**Detalhes de grid**/**Detalhes de painel** ativos, a extensão aprende sozinha os nomes técnicos de campos, colunas e painéis encontrados pelo caminho, junto com o rótulo visível na tela. No campo de busca no topo do popup, digite parte do nome técnico, do rótulo ou da tabela para encontrar; clique num resultado para copiar o nome técnico. Cresce naturalmente com o uso, guardado localmente.
@@ -34,6 +38,7 @@ Em **Capturar erros**, marque "Capturar e explicar erros do TASY" e deixe ligado
 - lê o arquivo de erro correspondente no console do **app server** (`wheb_arquivo.jsp`, no mesmo domínio, com a sessão que o navegador já tem — a senha do app server nunca é manipulada);
 - extrai a exceção, `Interface`/`Action`, parâmetros e o ponto do código que falhou;
 - puxa as consultas SQL que rodaram no processo (valores reais + tabelas), já que o "Nome de coluna inválido" do Oracle não informa a coluna;
+- quando reconhece o tipo do erro, aponta a **tela nativa certa do Tasy** em vez de um conselho genérico — erro de certificado digital/assinatura aponta pro Gerenciador de Certificado Digital; erro de acesso/permissão negada aponta pra Administração do Sistema → Perfis → Funções ou pro validador nativo em Controle de Acesso → Consulta;
 - monta uma explicação em português (o que aconteceu, em qual processo, causa provável, o que verificar) num painel na tela com botão **Copiar relatório**.
 
 Se o mesmo erro (tipo + tela + processo + parâmetro-chave) já ocorreu hoje, o relatório e a lista avisam (`⚠ Este erro já aconteceu: 3× hoje` / `· ×3 hoje`), para separar recorrência de caso pontual.
@@ -64,12 +69,13 @@ Cada opção liga/desliga independentemente pelo popup, em **Metadados TASY** (a
 
 - **Detalhes de campo**: mostra, acima de cada campo de formulário, o nome técnico da coluna (ex.: `CD_RELATORIO`, `DS_TITULO`).
 - **Detalhes de grid**: mostra o nome técnico da coluna no cabeçalho de cada grid (SlickGrid).
-- **Detalhes de painel**: mostra código/tipo, view e tabela do painel atual (ex.: `WDBPANEL 1038025`, `VIEW 96218`, `RELATORIO`). Em linhas curtas e empilhadas (ex.: categorias da CPOE), o badge fica fixo no canto inferior direito da linha em vez de cobrir o título nativo.
+- **Detalhes de painel**: mostra código/tipo, view e tabela do painel atual (ex.: `WDBPANEL 1038025`, `VIEW 96218`, `RELATORIO`). Em linhas curtas e empilhadas (ex.: categorias da CPOE), o badge fica fixo no canto inferior direito da linha em vez de cobrir o título nativo. Clicar no badge **VIEW** copia a consulta `select * from dic_objeto where nr_sequencia = <número>;` pronta pra colar no seu client de banco (Toad/SQL Developer/DBeaver) — a extensão não acessa o banco diretamente, só monta a query com o número certo. É uma pista pra investigar, não garantia: em teste real o retorno veio com cara de componente de tela (`NM_OBJETO = "MotivoIsolamentoWDBLCB"`, `IE_TIPO_OBJETO = "CLCB"`), não de tabela/view física — vale conferir a linha completa antes de confiar. Rode sempre no mesmo ambiente/base onde a tela foi aberta (ids não são os mesmos entre produção e homologação).
 - **Recentes (tela inicial)**: painel lateral na tela inicial do TASY com as últimas telas abertas, para acesso rápido (clique para abrir, "×" para remover).
 - **Idioma do usuário no rodapé**: mostra o idioma da sessão atual ao lado da data no rodapé.
-- **Modo inspeção**: exibe um botão "Inspecionar" fixo na tela; ao clicar em qualquer elemento, abre uma janela com **Contexto da função** (função aberta, painel/view/tabela, parâmetros encontrados no escopo e regras detectadas — cor/visibilidade) e, abaixo, o escopo AngularJS completo.
+- **Modo inspeção**: exibe um botão "Inspecionar" fixo na tela; ao clicar em qualquer elemento, abre uma janela com **Contexto da função** (função aberta, painel/view/tabela, parâmetros encontrados no escopo e regras detectadas — cor/visibilidade) e, abaixo, o escopo AngularJS completo. Se achar a tabela do componente, mostra também uma dica apontando pra Administração do Sistema → Consultas → Log Alteração / Log exclusão — a tela nativa pra ver quem alterou ou excluiu um registro daquela tabela.
 - **Waterfall de rede**: painel arrastável (canto inferior direito) com as últimas ~15 requisições reais da página numa linha do tempo (método + endereço, barra proporcional à duração, ms); lentas em laranja, com erro em vermelho; clique numa linha para copiar o endereço.
 - **Layout visual (relatórios)** *(experimental)*: quando a grade atual tem as colunas Esquerda/Topo/Tamanho/Altura (editor de bandas/campos de relatório do TASY), mostra um botão "📐 Layout visual" que abre um canvas com os campos já cadastrados nas posições reais. Tanto o botão quanto o canvas podem ser arrastados para qualquer ponto da tela (segure pelo cabeçalho do canvas). Arraste um novo campo (`+ Novo campo`) até a posição desejada e clique em **Copiar** para levar Esquerda/Topo/Tamanho/Altura prontos para colar na grade. É somente leitura: a extensão nunca escreve na grade do TASY, e só lê as linhas atualmente renderizadas na tela (role a grade se o campo de referência não estiver visível).
+- **Filtro nos menus (Perfil/Setor)**: nos menus do canto superior direito (Perfil, Setor, Estabelecimento), quando a lista é longa (>~8 itens) coloca um campo "Filtrar..." fixo no topo — digite parte do nome (ignora acento e caixa) e a lista some o que não bate, sem rolar. Some sozinho ao fechar o menu.
 
 Clicar em qualquer badge/label copia o valor para a área de transferência. Os botões **Limpar recentes** e **Recarregar estilos** ficam junto das opções de metadados.
 

@@ -128,6 +128,12 @@
       </section>
 
       <section>
+        <h2>Idioma da extensão 🇧🇷 / 🇺🇸</h2>
+        <p>No canto superior do popup tem duas bandeiras — 🇧🇷 e 🇺🇸 — para trocar o idioma da interface entre português e inglês. A escolha fica salva e vale tanto para o popup quanto para os botões, etiquetas e painéis que a extensão desenha por cima da tela do TASY (o badge de ambiente, o botão "Inspecionar", o painel de erro capturado, etc.).</p>
+        <p><em>Só a interface fixa da extensão é traduzida.</em> O conteúdo gerado pela extensão — as causas/verificações de cada tipo de erro, o texto do chamado e os relatórios em HTML baixados (Registrar Processo / erros) — continua em português, já que se destina ao seu time e sistemas internos independentemente do idioma escolhido para a interface.</p>
+      </section>
+
+      <section>
         <h2>Dicionário de dados</h2>
         <p>Enquanto você navega pelo TASY com os overlays de metadados ligados (abaixo), a extensão vai aprendendo sozinha os nomes técnicos de campos, colunas de grid e painéis que você encontra pelo caminho, junto com o rótulo (label) que aparece na tela.</p>
         <p>No campo de busca no topo do popup, digite parte do nome técnico (ex.: <code>CD_PESSOA_FISICA</code>), do rótulo (ex.: "paciente") ou da tabela, e veja tudo que já foi visto. Clique num resultado para copiar o nome técnico.</p>
@@ -156,6 +162,7 @@
         <div class="feature">
           <h3>Detalhes de painel</h3>
           <p>Mostra código/tipo, view e tabela do painel/tela atual (ex.: <code>WDBPANEL 1038025</code>, <code>VIEW 96218</code>, <code>RELATORIO</code>), útil para identificar rapidamente a tabela por trás de uma tela. Em telas com linhas curtas e empilhadas (ex.: as categorias da CPOE), o badge fica fixo no canto inferior direito da linha em vez de cobrir o título nativo.</p>
+          <p><em>Achar o SQL por trás de um painel:</em> a extensão não tem (e não deveria ter) acesso direto ao banco. O número da view não é aleatório — é o <code>nr_sequencia</code> do dicionário de objetos do próprio Tasy (tabela <code>DIC_OBJETO</code>) — e clicar no badge <strong>VIEW</strong> copia direto a consulta <code>select * from dic_objeto where nr_sequencia = &lt;número&gt;;</code> pra colar no seu client de banco (Toad, SQL Developer, DBeaver). <strong>Atenção:</strong> essa é uma pista pra investigar, não uma garantia — em testes reais o retorno já veio com cara de <em>componente de tela</em> (ex.: <code>NM_OBJETO = "MotivoIsolamentoWDBLCB"</code>, <code>IE_TIPO_OBJETO = "CLCB"</code>), não de tabela/view física, então o <code>DIC_OBJETO</code> parece ser um dicionário genérico (tabelas, views, campos, combos) — vale conferir o retorno completo da linha antes de confiar nele. Rode sempre na mesma base/ambiente onde a tela foi aberta, já que os ids não são os mesmos entre produção e homologação.</p>
         </div>
         <div class="feature">
           <h3>Recentes (tela inicial)</h3>
@@ -169,7 +176,7 @@
           <h3>Modo inspeção</h3>
           <p>Exibe um botão "Inspecionar" fixo na tela. Clique nele, depois clique em qualquer elemento da página. Abre uma janela com dois blocos:</p>
           <ul>
-            <li><strong>Contexto da função</strong> (no topo): a função aberta, o painel/view/tabela daquele componente, os <strong>parâmetros encontrados no escopo</strong> (qualquer objeto com "param" no nome, listado chave → valor) e as <strong>regras detectadas</strong> ali (cor de fundo aplicada, elemento oculto por condição, chaves de regra no escopo). Serve para responder "quais parâmetros e regras estão agindo nesta tela".</li>
+            <li><strong>Contexto da função</strong> (no topo): a função aberta, o painel/view/tabela daquele componente, os <strong>parâmetros encontrados no escopo</strong> (qualquer objeto com "param" no nome, listado chave → valor) e as <strong>regras detectadas</strong> ali (cor de fundo aplicada, elemento oculto por condição, chaves de regra no escopo). Serve para responder "quais parâmetros e regras estão agindo nesta tela". Se achar a tabela do componente, mostra também uma dica apontando para <strong>Administração do Sistema → Consultas → Log Alteração / Log exclusão</strong> — a tela nativa para ver quem alterou ou excluiu um registro daquela tabela.</li>
             <li><strong>Escopo AngularJS completo</strong> (abaixo): o objeto de escopo inteiro, para investigar de onde vem um dado que não tem badge.</li>
           </ul>
           <p>As consultas que carregam essas regras e parâmetros (<code>SQL_SQL_GET_COLOR_RULES</code>, <code>SQL_SCRIPT_PARAMETERS</code>, <code>OBTER_PARAMETROS_USUARIO</code>…) você abre no <strong>Explorador do app server</strong>.</p>
@@ -181,6 +188,10 @@
         <div class="feature">
           <h3>Layout visual (relatórios) <span class="badge">EXPERIMENTAL</span></h3>
           <p>Quando a grade atual tem as colunas Esquerda/Topo/Tamanho/Altura (editor de bandas/campos de relatório do TASY), mostra um botão "📐 Layout visual" que abre um canvas mostrando os campos já cadastrados nas posições reais. Arraste um novo campo até a posição desejada e clique em "Copiar" para levar os quatro números prontos para colar na grade. Tanto o botão quanto o canvas podem ser arrastados para qualquer lugar da tela. É somente leitura — nunca escreve na grade do TASY.</p>
+        </div>
+        <div class="feature">
+          <h3>Filtro nos menus (Perfil/Setor)</h3>
+          <p>Nos menus do canto superior direito — <strong>Perfil</strong>, <strong>Setor</strong> e <strong>Estabelecimento</strong> — quando a lista é longa, a extensão coloca um campo <strong>Filtrar...</strong> fixo no topo. Digite parte do nome (ignora acento e maiúscula/minúscula) e a lista some tudo que não bate, sem precisar rolar. Só aparece quando a lista tem mais de ~8 itens; some sozinho quando você fecha o menu.</p>
         </div>
       </section>
 
@@ -222,6 +233,7 @@
           <li>abre o arquivo de erro no <strong>console do app server</strong> (aquele endereço com a lista de arquivos <code>wheb_arquivo.jsp</code>) usando o seu login que já está ativo no navegador — a senha do app server nunca é digitada nem guardada;</li>
           <li>lê a mensagem real do servidor, <strong>qual processo</strong> estava rodando (ex.: "exportar perfil"), os parâmetros (ex.: qual perfil) e <strong>em que ponto do código</strong> quebrou;</li>
           <li>no caso do "Nome de coluna inválido" (o Oracle não diz qual coluna), busca as <strong>consultas SQL</strong> que rodaram naquele processo, com os valores reais e o nome das tabelas — para você comparar e achar a coluna;</li>
+          <li>quando reconhece o tipo do erro, aponta a <strong>tela nativa certa do Tasy</strong> em vez de um conselho genérico — por exemplo, erro de <strong>certificado digital/assinatura</strong> aponta para o Gerenciador de Certificado Digital, e erro de <strong>acesso/permissão negada</strong> aponta para Administração do Sistema → Perfis → Funções ou para o validador nativo em Controle de Acesso → Consulta;</li>
           <li>mostra um painel na tela com tudo organizado e um botão <strong>Copiar relatório</strong>.</li>
         </ul>
 

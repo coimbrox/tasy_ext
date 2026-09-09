@@ -37,6 +37,34 @@ body {
   flex-shrink: 0;
 }
 
+.lang-switch {
+  display: flex;
+  gap: 2px;
+}
+
+.lang-flag {
+  border: none;
+  background: transparent;
+  padding: 2px 3px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.4;
+  filter: grayscale(100%);
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.lang-flag:hover {
+  opacity: 0.75;
+}
+
+.lang-flag.active {
+  opacity: 1;
+  filter: none;
+  background: var(--surface-3, rgba(148, 163, 184, 0.18));
+}
+
 .manual-link {
   margin-left: auto;
   font-size: 11px;
