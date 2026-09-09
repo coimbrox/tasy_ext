@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manual — Tasy DevTools</title>
+    <title>Manual do Tasy DevTools</title>
     <style>
       :root {
         --accent: #0284C7;
@@ -119,122 +119,122 @@
   <body>
     <header>
       <img src="icon.png" alt="Tasy DevTools" />
-      <h1>Manual — Tasy DevTools</h1>
+      <h1>Manual do Tasy DevTools</h1>
     </header>
     <main>
       <section>
         <h2>Como funciona</h2>
-        <p>A extensão ativa suas funcionalidades automaticamente em qualquer aba cujo domínio contenha "tasy" no hostname (produção, homologação, dev). Não é preciso configurar nada — basta abrir o popup (clicando no ícone da extensão) e marcar as opções desejadas.</p>
+        <p>A extensão ativa suas funcionalidades automaticamente em qualquer aba cujo domínio contenha "tasy" no hostname (produção, homologação, desenvolvimento). Não é necessário configurar nada: basta abrir o popup, por meio do ícone da extensão, e marcar as opções desejadas.</p>
       </section>
 
       <section>
         <h2>Idioma da extensão 🇧🇷 / 🇺🇸</h2>
-        <p>No canto superior do popup tem duas bandeiras — 🇧🇷 e 🇺🇸 — para trocar o idioma da interface entre português e inglês. A escolha fica salva e vale tanto para o popup quanto para os botões, etiquetas e painéis que a extensão desenha por cima da tela do TASY (o badge de ambiente, o botão "Inspecionar", o painel de erro capturado, etc.).</p>
-        <p><em>Só a interface fixa da extensão é traduzida.</em> O conteúdo gerado pela extensão — as causas/verificações de cada tipo de erro, o texto do chamado e os relatórios em HTML baixados (Registrar Processo / erros) — continua em português, já que se destina ao seu time e sistemas internos independentemente do idioma escolhido para a interface.</p>
+        <p>No canto superior do popup há duas bandeiras, 🇧🇷 e 🇺🇸, que alternam o idioma da interface entre português e inglês. A escolha fica salva e vale tanto para o popup quanto para os botões, etiquetas e painéis que a extensão exibe sobre a tela do TASY, como o indicador de ambiente, o botão "Inspecionar" e o painel de erro capturado.</p>
+        <p>Apenas a interface fixa da extensão é traduzida. O conteúdo gerado pela extensão (as causas e verificações de cada tipo de erro, o texto do chamado e os relatórios em HTML produzidos por Registrar Processo e por Capturar erros) permanece em português, pois se destina à sua equipe e aos sistemas internos, independentemente do idioma escolhido para a interface.</p>
       </section>
 
       <section>
         <h2>Dicionário de dados</h2>
-        <p>Enquanto você navega pelo TASY com os overlays de metadados ligados (abaixo), a extensão vai aprendendo sozinha os nomes técnicos de campos, colunas de grid e painéis que você encontra pelo caminho, junto com o rótulo (label) que aparece na tela.</p>
-        <p>No campo de busca no topo do popup, digite parte do nome técnico (ex.: <code>CD_PESSOA_FISICA</code>), do rótulo (ex.: "paciente") ou da tabela, e veja tudo que já foi visto. Clique num resultado para copiar o nome técnico.</p>
-        <p><em>Quanto mais você usa o TASY com os overlays ativos, mais completo fica o dicionário — ele é só seu, guardado localmente no navegador.</em></p>
+        <p>Enquanto você navega pelo TASY com os overlays de metadados ativos (descritos adiante), a extensão registra automaticamente os nomes técnicos de campos, colunas de grid e painéis encontrados durante o uso, junto com o rótulo (label) exibido na tela.</p>
+        <p>No campo de busca no topo do popup, digite parte do nome técnico (por exemplo, <code>CD_PESSOA_FISICA</code>), do rótulo (por exemplo, "paciente") ou da tabela para consultar tudo o que já foi registrado. Clique em um resultado para copiar o nome técnico.</p>
+        <p>Quanto mais você utiliza o TASY com os overlays ativos, mais completo fica o dicionário. Ele é individual e permanece armazenado localmente no navegador.</p>
       </section>
 
       <section>
         <h2>Cores por ambiente</h2>
-        <p>Cadastre regras como "domínio contém <code>hml</code> → laranja, rótulo Homologação" no popup. Quando o hostname da aba bater com uma regra, a extensão mostra uma borda colorida ao redor de toda a tela e uma etiqueta arrastável com o rótulo — assim fica óbvio de relance se você está em produção, homologação, desenvolvimento ou qualquer outro ambiente que você configure. Funciona só com o hostname da própria aba, sem depender de cookie ou servidor.</p>
+        <p>Cadastre regras no popup, como "domínio contém <code>hml</code> → laranja, rótulo Homologação". Quando o hostname da aba corresponder a uma regra, a extensão exibe uma borda colorida ao redor de toda a tela e uma etiqueta móvel com o rótulo. Assim fica evidente, de imediato, se você está em produção, homologação, desenvolvimento ou em qualquer outro ambiente configurado. O recurso utiliza apenas o hostname da própria aba, sem depender de cookie ou de servidor.</p>
 
         <h3>Mostrar o estabelecimento logado</h3>
-        <p>A caixa <strong>"Mostrar o estabelecimento logado na etiqueta"</strong> acrescenta à etiqueta o estabelecimento em que você está (matriz/filial) — que normalmente só aparece pequeno no rodapé. Fica algo como <code>Homologação · Filial 2 · nó 1114</code>. É especialmente útil em instalações multi-estabelecimento, para não gravar/alterar coisa no lugar errado. Se não houver regra de cor para o domínio, a extensão mostra uma etiqueta cinza só com o estabelecimento. O nome é lido do próprio TASY (rodapé/sessão), nada é enviado para fora.</p>
+        <p>A opção <strong>"Mostrar o estabelecimento logado na etiqueta"</strong> acrescenta à etiqueta o estabelecimento em que você está (matriz ou filial), informação que normalmente aparece apenas em tamanho reduzido no rodapé. O resultado é semelhante a <code>Homologação · Filial 2 · nó 1114</code>. O recurso é especialmente útil em instalações com múltiplos estabelecimentos, para evitar registrar ou alterar informações no lugar errado. Se não houver regra de cor para o domínio, a extensão exibe uma etiqueta cinza apenas com o estabelecimento. O nome é lido do próprio TASY (rodapé ou sessão) e nada é enviado para fora.</p>
       </section>
 
       <section>
         <h2>Metadados TASY</h2>
-        <p>Cada opção abaixo liga/desliga um "overlay" — uma informação extra que a extensão desenha por cima da tela do TASY. A caixa <strong>"Ativar todos"</strong> no topo liga ou desliga as sete de uma vez (fica em traço quando só algumas estão ligadas).</p>
+        <p>Cada opção a seguir ativa ou desativa um overlay, isto é, uma informação adicional que a extensão exibe sobre a tela do TASY. A opção <strong>"Ativar todos"</strong>, no topo, liga ou desliga todas de uma vez, e permanece em estado intermediário quando apenas algumas estão ativas.</p>
         <div class="feature">
           <h3>Detalhes de campo</h3>
-          <p>Mostra, acima de cada campo de formulário, o nome técnico da coluna (ex.: <code>CD_RELATORIO</code>, <code>DS_TITULO</code>). Clique num badge para copiar o valor.</p>
+          <p>Exibe, acima de cada campo de formulário, o nome técnico da coluna (por exemplo, <code>CD_RELATORIO</code>, <code>DS_TITULO</code>). Clique em um badge para copiar o valor.</p>
         </div>
         <div class="feature">
           <h3>Detalhes de grid</h3>
-          <p>Mostra o nome técnico da coluna no cabeçalho de cada grid (SlickGrid).</p>
+          <p>Exibe o nome técnico da coluna no cabeçalho de cada grid (SlickGrid).</p>
         </div>
         <div class="feature">
           <h3>Detalhes de painel</h3>
-          <p>Mostra código/tipo, view e tabela do painel/tela atual (ex.: <code>WDBPANEL 1038025</code>, <code>VIEW 96218</code>, <code>RELATORIO</code>), útil para identificar rapidamente a tabela por trás de uma tela. Em telas com linhas curtas e empilhadas (ex.: as categorias da CPOE), o badge fica fixo no canto inferior direito da linha em vez de cobrir o título nativo.</p>
-          <p><em>Achar o SQL por trás de um painel:</em> a extensão não tem (e não deveria ter) acesso direto ao banco. O número da view não é aleatório — é o <code>nr_sequencia</code> do dicionário de objetos do próprio Tasy (tabela <code>DIC_OBJETO</code>) — e clicar no badge <strong>VIEW</strong> copia direto a consulta <code>select * from dic_objeto where nr_sequencia = &lt;número&gt;;</code> pra colar no seu client de banco (Toad, SQL Developer, DBeaver). <strong>Atenção:</strong> essa é uma pista pra investigar, não uma garantia — em testes reais o retorno já veio com cara de <em>componente de tela</em> (ex.: <code>NM_OBJETO = "MotivoIsolamentoWDBLCB"</code>, <code>IE_TIPO_OBJETO = "CLCB"</code>), não de tabela/view física, então o <code>DIC_OBJETO</code> parece ser um dicionário genérico (tabelas, views, campos, combos) — vale conferir o retorno completo da linha antes de confiar nele. Rode sempre na mesma base/ambiente onde a tela foi aberta, já que os ids não são os mesmos entre produção e homologação.</p>
+          <p>Exibe o código e o tipo, a view e a tabela do painel ou tela atual (por exemplo, <code>WDBPANEL 1038025</code>, <code>VIEW 96218</code>, <code>RELATORIO</code>), o que ajuda a identificar rapidamente a tabela por trás de uma tela. Em telas com linhas curtas e empilhadas (por exemplo, as categorias da CPOE), o badge é fixado no canto inferior direito da linha, para não cobrir o título nativo.</p>
+          <p><em>Localizar o SQL por trás de um painel.</em> A extensão não possui, e não deve possuir, acesso direto ao banco de dados. O número da view não é aleatório: corresponde ao <code>nr_sequencia</code> do dicionário de objetos do próprio Tasy (tabela <code>DIC_OBJETO</code>). Ao clicar no badge <strong>VIEW</strong>, a extensão copia a consulta <code>select * from dic_objeto where nr_sequencia = &lt;número&gt;;</code> para que você a execute no seu cliente de banco de dados (Toad, SQL Developer, DBeaver). <strong>Observação:</strong> trata-se de um ponto de partida para investigação, não de uma garantia. Em testes reais, o retorno apresentou características de <em>componente de tela</em> (por exemplo, <code>NM_OBJETO = "MotivoIsolamentoWDBLCB"</code>, <code>IE_TIPO_OBJETO = "CLCB"</code>), e não de tabela ou view física; portanto, o <code>DIC_OBJETO</code> parece ser um dicionário genérico, que abrange tabelas, views, campos e combos. Convém conferir o retorno completo da linha antes de considerá-lo definitivo. Execute sempre a consulta na mesma base ou ambiente em que a tela foi aberta, pois os identificadores não são os mesmos entre produção e homologação.</p>
         </div>
         <div class="feature">
           <h3>Recentes (tela inicial)</h3>
-          <p>Na tela inicial do TASY, mostra um painel lateral com as últimas telas abertas, para acesso rápido — clique para abrir, "×" para remover da lista.</p>
+          <p>Na tela inicial do TASY, exibe um painel lateral com as últimas telas abertas, para acesso rápido. Clique em um item para abri-lo ou no "×" para removê-lo da lista.</p>
         </div>
         <div class="feature">
           <h3>Idioma do usuário no rodapé</h3>
-          <p>Mostra o idioma da sessão atual ao lado da data no rodapé da tela.</p>
+          <p>Exibe o idioma da sessão atual ao lado da data, no rodapé da tela.</p>
         </div>
         <div class="feature">
           <h3>Modo inspeção</h3>
-          <p>Exibe um botão "Inspecionar" fixo na tela. Clique nele, depois clique em qualquer elemento da página. Abre uma janela com dois blocos:</p>
+          <p>Exibe um botão "Inspecionar" fixo na tela. Clique nesse botão e, em seguida, em qualquer elemento da página. Será aberta uma janela com dois blocos:</p>
           <ul>
-            <li><strong>Contexto da função</strong> (no topo): a função aberta, o painel/view/tabela daquele componente, os <strong>parâmetros encontrados no escopo</strong> (qualquer objeto com "param" no nome, listado chave → valor) e as <strong>regras detectadas</strong> ali (cor de fundo aplicada, elemento oculto por condição, chaves de regra no escopo). Serve para responder "quais parâmetros e regras estão agindo nesta tela". Se achar a tabela do componente, mostra também uma dica apontando para <strong>Administração do Sistema → Consultas → Log Alteração / Log exclusão</strong> — a tela nativa para ver quem alterou ou excluiu um registro daquela tabela.</li>
-            <li><strong>Escopo AngularJS completo</strong> (abaixo): o objeto de escopo inteiro, para investigar de onde vem um dado que não tem badge.</li>
+            <li><strong>Contexto da função</strong> (no topo): a função aberta, o painel, a view e a tabela daquele componente, os <strong>parâmetros encontrados no escopo</strong> (qualquer objeto com "param" no nome, listado no formato chave → valor) e as <strong>regras detectadas</strong> naquele ponto (cor de fundo aplicada, elemento oculto por condição, chaves de regra no escopo). Serve para responder à pergunta "quais parâmetros e regras estão em vigor nesta tela". Se a tabela do componente for identificada, também é exibida uma indicação para <strong>Administração do Sistema → Consultas → Log Alteração / Log exclusão</strong>, tela nativa que mostra quem alterou ou excluiu um registro daquela tabela.</li>
+            <li><strong>Escopo AngularJS completo</strong> (abaixo): o objeto de escopo inteiro, para investigar a origem de um dado que não possui badge.</li>
           </ul>
-          <p>As consultas que carregam essas regras e parâmetros (<code>SQL_SQL_GET_COLOR_RULES</code>, <code>SQL_SCRIPT_PARAMETERS</code>, <code>OBTER_PARAMETROS_USUARIO</code>…) você abre no <strong>Explorador do app server</strong>.</p>
+          <p>As consultas que carregam essas regras e parâmetros (<code>SQL_SQL_GET_COLOR_RULES</code>, <code>SQL_SCRIPT_PARAMETERS</code>, <code>OBTER_PARAMETROS_USUARIO</code>, entre outras) podem ser abertas no <strong>Explorador do app server</strong>.</p>
         </div>
         <div class="feature">
           <h3>Waterfall de rede</h3>
-          <p>Mostra um painel fixo (arrastável, no canto inferior direito) com as <strong>últimas ~15 requisições reais</strong> que a página fez, em forma de linha do tempo: método + endereço, uma barra proporcional à duração e o tempo em ms. As lentas ficam em <span style="color:#F59E0B">laranja</span>, as que deram erro em <span style="color:#EF4444">vermelho</span>. Clique numa linha para copiar o endereço. Use para achar "qual chamada está segurando a tela"; para ver o lado servidor, abra o arquivo correspondente no Explorador do app server.</p>
+          <p>Exibe um painel fixo e móvel, no canto inferior direito, com as <strong>últimas 15 requisições reais</strong> efetuadas pela página, em forma de linha do tempo: método e endereço, uma barra proporcional à duração e o tempo em milissegundos. As requisições lentas aparecem em <span style="color:#F59E0B">laranja</span> e as que resultaram em erro, em <span style="color:#EF4444">vermelho</span>. Clique em uma linha para copiar o endereço. Utilize o recurso para identificar qual chamada está retardando a tela; para analisar o lado servidor, abra o arquivo correspondente no Explorador do app server.</p>
         </div>
         <div class="feature">
           <h3>Layout visual (relatórios) <span class="badge">EXPERIMENTAL</span></h3>
-          <p>Quando a grade atual tem as colunas Esquerda/Topo/Tamanho/Altura (editor de bandas/campos de relatório do TASY), mostra um botão "📐 Layout visual" que abre um canvas mostrando os campos já cadastrados nas posições reais. Arraste um novo campo até a posição desejada e clique em "Copiar" para levar os quatro números prontos para colar na grade. Tanto o botão quanto o canvas podem ser arrastados para qualquer lugar da tela. É somente leitura — nunca escreve na grade do TASY.</p>
+          <p>Quando a grade atual possui as colunas Esquerda, Topo, Tamanho e Altura (editor de bandas e campos de relatório do TASY), a extensão exibe um botão "📐 Layout visual" que abre um quadro com os campos já cadastrados em suas posições reais. Arraste um novo campo até a posição desejada e clique em "Copiar" para obter os quatro valores prontos para colar na grade. Tanto o botão quanto o quadro podem ser reposicionados livremente na tela. O recurso é somente leitura e nunca escreve na grade do TASY.</p>
         </div>
         <div class="feature">
           <h3>Filtro nos menus (Perfil/Setor)</h3>
-          <p>Nos menus do canto superior direito — <strong>Perfil</strong>, <strong>Setor</strong> e <strong>Estabelecimento</strong> — quando a lista é longa, a extensão coloca um campo <strong>Filtrar...</strong> fixo no topo. Digite parte do nome (ignora acento e maiúscula/minúscula) e a lista some tudo que não bate, sem precisar rolar. Só aparece quando a lista tem mais de ~8 itens; some sozinho quando você fecha o menu.</p>
+          <p>Nos menus do canto superior direito (<strong>Perfil</strong>, <strong>Setor</strong> e <strong>Estabelecimento</strong>), quando a lista é extensa, a extensão adiciona um campo <strong>Filtrar...</strong> fixo no topo. Digite parte do nome (o filtro ignora acentuação e diferença entre maiúsculas e minúsculas) e a lista oculta tudo o que não corresponde, sem necessidade de rolagem. O campo aparece apenas quando a lista tem mais de oito itens e é removido automaticamente ao fechar o menu.</p>
         </div>
       </section>
 
       <section>
         <h2>Registrar Processo</h2>
-        <p>Pensado para documentar um processo passo a passo — por exemplo, para anexar num chamado aberto com a Philips.</p>
-        <p><strong>Iniciar registro:</strong> zera o log e começa a gravar, em ordem cronológica, cada tela aberta, clique em botões/links e valor preenchido em campos (exceto senhas). Internamente também mede a latência de rede para detectar oscilação, mas isso não aparece no texto final.</p>
-        <p>Execute normalmente o processo que quer documentar.</p>
-        <p><strong>Parar registro:</strong> encerra a gravação e automaticamente:</p>
+        <p>Recurso destinado a documentar um processo passo a passo, por exemplo, para anexar a um chamado aberto com a Philips.</p>
+        <p><strong>Iniciar registro:</strong> limpa o log e passa a gravar, em ordem cronológica, cada tela aberta, cada clique em botões ou links e cada valor preenchido em campos (exceto senhas). Internamente, também mede a latência de rede para detectar oscilações, mas essa informação não consta do texto final.</p>
+        <p>Execute normalmente o processo que deseja documentar.</p>
+        <p><strong>Parar registro:</strong> encerra a gravação e, automaticamente:</p>
         <ul>
-          <li>Tira um <strong>print final da tela exatamente como ela está no momento em que você para</strong> (o "resultado" do processo, que nenhum clique cobre) e adiciona como último passo — "🏁 Fim do registro";</li>
-          <li>Copia para a área de transferência um resumo em texto do passo a passo;</li>
-          <li>Baixa um arquivo <code>.html</code> com o mesmo passo a passo, incluindo um print da tela em cada passo — pronto para anexar num chamado de suporte.</li>
+          <li>captura uma imagem final da tela exatamente como ela se encontra no momento em que você interrompe a gravação (o resultado do processo, que nenhum clique registra) e a adiciona como último passo, identificado por "🏁 Fim do registro";</li>
+          <li>copia para a área de transferência um resumo em texto do passo a passo;</li>
+          <li>faz o download de um arquivo <code>.html</code> com o mesmo passo a passo, incluindo uma imagem da tela em cada etapa, pronto para anexar a um chamado de suporte.</li>
         </ul>
         <div class="example">[14:32:10] 🖥️ Tela aberta: Cadastro de Usuários
 [14:32:12] ⌨️ Preencheu "Código": 12345
 [14:32:15] 🖱️ Clicou em: Salvar
 [14:32:18] 🏁 Fim do registro — tela ao parar a captura</div>
-        <div class="warning">Atenção: como o registro guarda os valores digitados nos campos, revise o texto/arquivo antes de compartilhar caso o processo envolva dados sensíveis (ex.: dados de paciente).</div>
+        <div class="warning">Atenção: como o registro armazena os valores digitados nos campos, revise o texto e o arquivo antes de compartilhá-los caso o processo envolva dados sensíveis (por exemplo, dados de paciente).</div>
       </section>
 
       <section>
         <h2>Capturar erros</h2>
 
         <h3>Para que serve</h3>
-        <p>Às vezes você faz algo no TASY e aparece uma tela vermelha: <em>"Houve um erro na execução da aplicação"</em>, com um texto técnico curto como "Nome de coluna inválido". Essa tela não diz <strong>o que</strong> deu errado, <strong>onde</strong>, nem <strong>por quê</strong>. Com esta opção ligada, a extensão pega esse erro e monta uma explicação em português, já com o passo a passo de como investigar — pronta para colar num chamado.</p>
+        <p>Em determinadas situações, ao executar uma ação no TASY, aparece uma tela vermelha com a mensagem <em>"Houve um erro na execução da aplicação"</em> e um texto técnico breve, como "Nome de coluna inválido". Essa tela não informa <strong>o que</strong> ocorreu, <strong>onde</strong> nem <strong>por quê</strong>. Com esta opção ativada, a extensão captura o erro e monta uma explicação em português, já com o roteiro de investigação, pronta para colar em um chamado.</p>
 
-        <h3>Como ligar (uma vez só)</h3>
+        <h3>Como ativar (uma única vez)</h3>
         <ol class="steps">
           <li>Abra o popup da extensão (ícone na barra do Chrome).</li>
-          <li>Na seção <strong>Capturar erros</strong>, marque a caixa <strong>"Capturar e explicar erros do TASY"</strong>.</li>
-          <li>Clique em <strong>Testar acesso</strong>. Se aparecer "Acesso OK", está pronto. Se aparecer "Precisa de login", abra o endereço do app server uma vez no navegador e clique em "Testar acesso" de novo.</li>
+          <li>Na seção <strong>Capturar erros</strong>, marque a opção <strong>"Capturar e explicar erros do TASY"</strong>.</li>
+          <li>Clique em <strong>Testar acesso</strong>. Se a mensagem "Acesso OK" for exibida, a configuração está concluída. Se aparecer "Precisa de login", abra o endereço do app server uma vez no navegador e clique novamente em "Testar acesso".</li>
         </ol>
-        <p>Pronto — pode fechar o popup e trabalhar normalmente. Ele continua ligado nas próximas vezes que abrir o navegador.</p>
+        <p>Concluído. Você pode fechar o popup e trabalhar normalmente. O recurso permanece ativo nas próximas vezes em que abrir o navegador.</p>
 
-        <h3>O que acontece quando dá erro</h3>
-        <p>Assim que a tela vermelha aparece, sozinha e em segundo plano, a extensão:</p>
+        <h3>O que acontece quando ocorre um erro</h3>
+        <p>Assim que a tela vermelha aparece, de forma automática e em segundo plano, a extensão:</p>
         <ul>
-          <li>abre o arquivo de erro no <strong>console do app server</strong> (aquele endereço com a lista de arquivos <code>wheb_arquivo.jsp</code>) usando o seu login que já está ativo no navegador — a senha do app server nunca é digitada nem guardada;</li>
-          <li>lê a mensagem real do servidor, <strong>qual processo</strong> estava rodando (ex.: "exportar perfil"), os parâmetros (ex.: qual perfil) e <strong>em que ponto do código</strong> quebrou;</li>
-          <li>no caso do "Nome de coluna inválido" (o Oracle não diz qual coluna), busca as <strong>consultas SQL</strong> que rodaram naquele processo, com os valores reais e o nome das tabelas — para você comparar e achar a coluna;</li>
-          <li>quando reconhece o tipo do erro, aponta a <strong>tela nativa certa do Tasy</strong> em vez de um conselho genérico — por exemplo, erro de <strong>certificado digital/assinatura</strong> aponta para o Gerenciador de Certificado Digital, e erro de <strong>acesso/permissão negada</strong> aponta para Administração do Sistema → Perfis → Funções ou para o validador nativo em Controle de Acesso → Consulta;</li>
-          <li>mostra um painel na tela com tudo organizado e um botão <strong>Copiar relatório</strong>.</li>
+          <li>abre o arquivo de erro no <strong>console do app server</strong> (o endereço com a lista de arquivos <code>wheb_arquivo.jsp</code>) utilizando o login já ativo no navegador; a senha do app server nunca é digitada nem armazenada;</li>
+          <li>lê a mensagem real do servidor, identifica <strong>qual processo</strong> estava em execução (por exemplo, "exportar perfil"), os parâmetros (por exemplo, qual perfil) e <strong>em que ponto do código</strong> ocorreu a falha;</li>
+          <li>no caso de "Nome de coluna inválido" (o Oracle não informa qual coluna), busca as <strong>consultas SQL</strong> executadas naquele processo, com os valores reais e os nomes das tabelas, para que você compare e localize a coluna;</li>
+          <li>quando reconhece o tipo do erro, indica a <strong>tela nativa apropriada do Tasy</strong>, em vez de uma orientação genérica. Por exemplo: erro de <strong>certificado digital ou assinatura</strong> remete ao Gerenciador de Certificado Digital, e erro de <strong>acesso ou permissão negada</strong> remete a Administração do Sistema → Perfis → Funções, ou ao validador nativo em Controle de Acesso → Consulta;</li>
+          <li>exibe um painel na tela com todas as informações organizadas e um botão <strong>Copiar relatório</strong>.</li>
         </ul>
 
         <h3>Como fica o relatório</h3>
@@ -258,45 +258,45 @@ CD_PERFIL=2150, DS_PERFIL=UUE - Triagem
     FROM PERFIL_ITEM_PRONT_PASTA a WHERE nr_seq_item_perfil = '1011'</div>
 
         <h3>"Este erro já aconteceu"</h3>
-        <p>Se o mesmo erro (mesmo tipo, mesma tela, mesmo processo e mesmo parâmetro-chave, ex.: o mesmo perfil) já tiver acontecido hoje, o relatório e o painel avisam: <em>"⚠ Este erro já aconteceu: 3× hoje (1ª vez às 09:40)"</em>. Na lista do popup, o item mostra <code>· ×3 hoje</code>. Serve para saber de cara se é um problema recorrente ou pontual.</p>
+        <p>Se o mesmo erro (mesmo tipo, mesma tela, mesmo processo e mesmo parâmetro-chave, por exemplo, o mesmo perfil) já tiver ocorrido no mesmo dia, o relatório e o painel informam: <em>"⚠ Este erro já aconteceu: 3× hoje (1ª vez às 09:40)"</em>. Na lista do popup, o item exibe <code>· ×3 hoje</code>. Serve para identificar de imediato se o problema é recorrente ou pontual.</p>
 
-        <h3>Ver de novo depois</h3>
-        <p>Os últimos erros ficam listados no popup. Clique num item para copiar só ele, ou use <strong>Baixar relatório</strong> para um arquivo <code>.html</code> com todos.</p>
+        <h3>Consultar posteriormente</h3>
+        <p>Os últimos erros ficam listados no popup. Clique em um item para copiar apenas ele, ou utilize <strong>Baixar relatório</strong> para gerar um arquivo <code>.html</code> com todos.</p>
 
         <h3>Endereço do app server</h3>
-        <p>O campo <strong>"URL do app server"</strong> normalmente fica <strong>vazio</strong> — a extensão usa o mesmo endereço do TASY automaticamente. Só preencha se, na sua empresa, o app server ficar em outro endereço.</p>
+        <p>O campo <strong>"URL do app server"</strong> normalmente permanece <strong>vazio</strong>, pois a extensão utiliza o mesmo endereço do TASY automaticamente. Preencha-o apenas se, na sua empresa, o app server estiver em outro endereço.</p>
 
-        <div class="warning">O relatório pode conter números de registros ou de pacientes ligados à operação que falhou (números longos são trocados por •). Sempre leia o relatório antes de anexar num chamado.</div>
+        <div class="warning">O relatório pode conter números de registros ou de pacientes relacionados à operação que falhou (números longos são substituídos por •). Leia sempre o relatório antes de anexá-lo a um chamado.</div>
       </section>
 
       <section>
         <h2>Servidor / nó do app server</h2>
 
         <h3>Para que serve</h3>
-        <p>Quando a empresa tem vários servidores de aplicação (um "cluster"), a sua sessão fica presa a um deles. Às vezes um erro só acontece em um servidor específico — e saber em qual você está economiza tempo no diagnóstico.</p>
+        <p>Quando a empresa possui vários servidores de aplicação (um cluster), a sua sessão fica vinculada a um deles. Em alguns casos, um erro ocorre apenas em um servidor específico, e saber em qual você está reduz o tempo de diagnóstico.</p>
 
         <h3>Onde aparece</h3>
-        <p>A extensão descobre isso sozinha (do cookie <code>JSESSIONID</code>, cujo valor no Wheb é algo como <code>tasy-tasyappserver-…_1114~…</code>) e mostra o <strong>número do servidor</strong> — no exemplo, <code>1114</code> — em três lugares:</p>
+        <p>A extensão identifica essa informação automaticamente (a partir do cookie <code>JSESSIONID</code>, cujo valor no Wheb é semelhante a <code>tasy-tasyappserver-…_1114~…</code>) e exibe o <strong>número do servidor</strong> (no exemplo, <code>1114</code>) em três locais:</p>
         <ul>
           <li>no popup, logo abaixo da lista de erros: "Servidor atual: nó 1114";</li>
           <li>no relatório de erro, na linha "Servidor (nó)";</li>
-          <li>na etiqueta de <strong>Cores por ambiente</strong>, se você tiver uma regra ativa: <code>HML · nó 1114</code>.</li>
+          <li>na etiqueta de <strong>Cores por ambiente</strong>, caso haja uma regra ativa: <code>HML · nó 1114</code>.</li>
         </ul>
-        <p>Só o número do nó é lido — a extensão não lê nem guarda o restante da sua sessão.</p>
+        <p>Apenas o número do nó é lido; a extensão não lê nem armazena o restante da sua sessão.</p>
       </section>
 
       <section>
         <h2>Gerar chamado</h2>
 
         <h3>Para que serve</h3>
-        <p>Escrever um chamado completo dá trabalho: ambiente, versão, servidor, passos, o erro... Este botão junta tudo isso automaticamente, a partir do que a extensão já registrou.</p>
+        <p>Redigir um chamado completo é trabalhoso: ambiente, versão, servidor, passos, o erro. Este botão reúne todas essas informações automaticamente, a partir do que a extensão já registrou.</p>
 
         <h3>Como usar</h3>
         <ol class="steps">
-          <li>Se quiser incluir o passo a passo, grave-o antes com o <strong>Registrar Processo</strong>.</li>
-          <li>Na seção <strong>Gerar chamado</strong>, escreva numa linha <strong>o que deveria acontecer</strong> e na outra <strong>o que aconteceu</strong>.</li>
-          <li>Clique em <strong>Gerar texto</strong>. O texto aparece na caixa, já com ambiente, nó do servidor, versão, função/tela, os passos e o último erro capturado.</li>
-          <li>Ajuste o que quiser direto na caixa e clique em <strong>Copiar</strong>.</li>
+          <li>Se desejar incluir o passo a passo, grave-o previamente com o <strong>Registrar Processo</strong>.</li>
+          <li>Na seção <strong>Gerar chamado</strong>, informe em uma linha <strong>o que deveria acontecer</strong> e, na outra, <strong>o que aconteceu</strong>.</li>
+          <li>Clique em <strong>Gerar texto</strong>. O texto aparece na caixa, já com ambiente, nó do servidor, versão, função ou tela, os passos e o último erro capturado.</li>
+          <li>Ajuste o que for necessário diretamente na caixa e clique em <strong>Copiar</strong>.</li>
         </ol>
 
         <h3>Como fica o texto</h3>
@@ -315,24 +315,24 @@ OBTIDO: erro "Nome de coluna inválido"
 --- ERRO CAPTURADO ---
 (o relatório completo da captura de erros entra aqui)</div>
 
-        <div class="warning">O texto inclui os passos e o erro capturado — revise antes de enviar caso envolva dados sensíveis.</div>
+        <div class="warning">O texto inclui os passos e o erro capturado. Revise-o antes de enviar caso envolva dados sensíveis.</div>
       </section>
 
       <section>
         <h2>Explorador do app server</h2>
 
         <h3>Para que serve</h3>
-        <p>O app server guarda, para cada usuário, um "rastro" de tudo que rodou no servidor: cada consulta SQL, cada procedure, cada erro. Esse rastro fica num console de arquivos difícil de navegar. Esta seção traz uma lista limpa disso dentro do popup — útil para ver a consulta exata que uma tela disparou, quanto tempo levou, ou o erro que acabou de acontecer.</p>
+        <p>O app server mantém, para cada usuário, um registro de tudo o que foi executado no servidor: cada consulta SQL, cada procedure e cada erro. Esse registro fica em um console de arquivos de navegação difícil. Esta seção apresenta uma lista organizada desse conteúdo dentro do popup, útil para consultar a consulta exata que uma tela disparou, o tempo que levou ou o erro que acabou de ocorrer.</p>
 
         <h3>Como usar</h3>
         <ol class="steps">
-          <li>Com o TASY aberto e logado na aba ativa, abra o popup e vá em <strong>Explorador do app server</strong>.</li>
-          <li>Clique em <strong>Atualizar lista</strong>. Aparecem os arquivos mais recentes do seu usuário (<code>SQL_…</code>, <code>PROCEDURE_…</code>, <code>ERRO_…</code>), com o tempo de execução e a hora.</li>
-          <li>Use o campo <strong>Filtrar por nome</strong> para achar rápido (ex.: digite <code>PERFIL</code>, <code>GERAR</code> ou <code>ERRO</code>).</li>
-          <li>Clique num item para ver o conteúdo na caixa de baixo — a consulta SQL já com os valores reais, ou o texto do erro. <strong>Copiar conteúdo</strong> leva tudo para a área de transferência.</li>
+          <li>Com o TASY aberto e autenticado na aba ativa, abra o popup e acesse <strong>Explorador do app server</strong>.</li>
+          <li>Clique em <strong>Atualizar lista</strong>. São exibidos os arquivos mais recentes do seu usuário (<code>SQL_…</code>, <code>PROCEDURE_…</code>, <code>ERRO_…</code>), com o tempo de execução e o horário.</li>
+          <li>Utilize o campo <strong>Filtrar por nome</strong> para localizar rapidamente (por exemplo, digite <code>PERFIL</code>, <code>GERAR</code> ou <code>ERRO</code>).</li>
+          <li>Clique em um item para ver o conteúdo na caixa inferior: a consulta SQL já com os valores reais, ou o texto do erro. O botão <strong>Copiar conteúdo</strong> leva tudo para a área de transferência.</li>
         </ol>
 
-        <div class="warning">O conteúdo pode conter valores reais (inclusive de pacientes). Revise antes de compartilhar.</div>
+        <div class="warning">O conteúdo pode conter valores reais, inclusive de pacientes. Revise antes de compartilhar.</div>
       </section>
 
       <section>
@@ -343,26 +343,26 @@ OBTIDO: erro "Nome de coluna inválido"
         </div>
         <div class="feature">
           <h3>Recarregar estilos</h3>
-          <p>Força o navegador a buscar de novo os arquivos CSS da página TASY, sem precisar recarregar a página inteira — útil quando alguém está ajustando o visual de uma tela ao vivo.</p>
+          <p>Força o navegador a recarregar os arquivos CSS da página do TASY sem recarregar a página inteira. É útil quando o visual de uma tela está sendo ajustado em tempo real.</p>
         </div>
       </section>
 
       <section>
         <h2>Privacidade</h2>
-        <p>A extensão não envia nenhum dado para servidores externos — tudo fica local no seu navegador. Veja a <a href="https://github.com/coimbrox/tasy_ext/blob/main/PRIVACY.md" target="_blank" rel="noopener">política de privacidade completa</a> para detalhes.</p>
+        <p>A extensão não envia nenhum dado a servidores externos; tudo permanece localmente no seu navegador. Consulte a <a href="https://github.com/coimbrox/tasy_ext/blob/main/PRIVACY.md" target="_blank" rel="noopener">política de privacidade completa</a> para obter detalhes.</p>
       </section>
 
       <section id="contato">
         <h2>Sugestões e contato</h2>
-        <p>Tem uma ideia do que poderia ter na extensão, encontrou um bug ou quer relatar algo? Escreva para <a href="mailto:coimbrawebs@gmail.com">coimbrawebs@gmail.com</a> ou abra uma issue no <a href="https://github.com/coimbrox/tasy_ext" target="_blank" rel="noopener">repositório do projeto</a>.</p>
+        <p>Se você tem uma sugestão de recurso, encontrou um problema ou deseja relatar algo, escreva para <a href="mailto:coimbrawebs@gmail.com">coimbrawebs@gmail.com</a> ou abra uma issue no <a href="https://github.com/coimbrox/tasy_ext" target="_blank" rel="noopener">repositório do projeto</a>.</p>
       </section>
 
       <section id="apoie">
         <h2>☕ Apoie o projeto</h2>
-        <p>O Tasy DevTools é gratuito e feito nas horas vagas. Se ele te economiza tempo no dia a dia, um café é sempre bem-vindo:</p>
+        <p>O Tasy DevTools é gratuito e desenvolvido em tempo livre. Se ele economiza seu tempo no dia a dia, uma contribuição é sempre bem-vinda:</p>
         <p><strong>PIX:</strong> <code>coimbrawebs@gmail.com</code></p>
       </section>
     </main>
-    <footer>Tasy DevTools — feito para quem trabalha com TASY no dia a dia.</footer>
+    <footer>Tasy DevTools · desenvolvido para quem trabalha com TASY no dia a dia.</footer>
   </body>
 </html>
