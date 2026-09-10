@@ -719,6 +719,23 @@ function interpretErrorClass({ text, version }) {
 
   const rules = [
     {
+      re: /GERAR_COLUNAS_SQL_RELAT|GERAR_CAMPOS_SQL|gerar campos sql/i,
+      signature: "Erro ao gerar os campos SQL de um relatório (banda)",
+      what:
+        "A rotina que dimensiona os campos do relatório (procedure GERAR_COLUNAS_SQL_RELAT, acionada por 'Gerar Campos SQL' no Gerenciador de Relatórios) não conseguiu calcular o tamanho de uma coluna da consulta. Quase sempre é uma coluna de texto que devolve caracteres demais, ou um apelido (alias) longo ou com acento.",
+      causes: [
+        "Coluna de texto, ou retorno de function/procedure na consulta, sem limite de caracteres (sem SUBSTR).",
+        "Alias de atributo com mais de ~20 caracteres.",
+        "Alias com acento, espaço ou caractere especial."
+      ],
+      checks: [
+        "Envolver as colunas de texto e os retornos de function/procedure em SUBSTR(campo, 1, N) — ex.: SUBSTR(ds_observacao, 1, 200).",
+        "Deixar cada alias com no máximo 20 caracteres, sem acento e sem caractere especial.",
+        "Para achar a coluna culpada: deixar a consulta com um único campo, usar 'Gerar Campos SQL', e ir adicionando campo a campo até o erro voltar.",
+        "Referência: 'Manual do Gerenciador de Relatórios' no CustomerPortal (Client Portal)."
+      ]
+    },
+    {
       re: /nome de coluna inv[aá]lid|invalid column name|ORA-00904|getColumnIndex/i,
       signature: "Coluna inexistente no banco (SQL inválido)",
       what:
@@ -795,11 +812,11 @@ function interpretErrorClass({ text, version }) {
       checks: [name ? "Preencher/verificar o campo correspondente a `" + name + "`." : "Revisar os campos obrigatórios da tela.", "Checar regras no evento de gravação."]
     },
     {
-      re: /ORA-12899|value too large for column|string or binary data would be truncated/i,
+      re: /ORA-12899|ORA-01438|value too large for column|value larger than specified precision|string or binary data would be truncated/i,
       signature: "Valor maior que o tamanho da coluna",
-      what: "O texto informado é maior do que o tamanho da coluna no banco" + nameRef + ".",
-      causes: ["Digitou mais caracteres do que o campo suporta.", "Integração enviando valor longo."],
-      checks: ["Reduzir o tamanho do valor.", name ? "Conferir o tamanho definido para `" + name + "`." : ""]
+      what: "O valor informado é maior do que o tamanho ou a precisão da coluna no banco" + nameRef + ".",
+      causes: ["Digitou mais caracteres/dígitos do que o campo suporta.", "Integração enviando valor longo.", "SQL customizado devolvendo um valor sem SUBSTR/ROUND."],
+      checks: ["Reduzir o tamanho do valor (SUBSTR para texto, ROUND para número).", name ? "Conferir o tamanho/precisão definido para `" + name + "`." : ""]
     },
     {
       re: /ORA-01722|invalid number|conversion failed.*to data type (int|numeric|bigint)/i,
