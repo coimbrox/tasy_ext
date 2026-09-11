@@ -615,9 +615,7 @@ li.tex-menu-hidden {
 }
 
 /* --- Registrar Processo: flash around the clicked/filled element so the ---
-   step screenshot shows exactly where the user acted. Removal is timed from
-   JS (tied to when the screenshot is confirmed captured), not CSS, so no
-   fade/duration lives here. */
+   step screenshot shows exactly where the user acted. */
 .tex-record-highlight {
   position: fixed;
   z-index: 2147483000;
@@ -626,4 +624,10 @@ li.tex-menu-hidden {
   border-radius: 4px;
   box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.35), 0 0 12px rgba(220, 38, 38, 0.6);
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.tex-record-highlight.tex-record-highlight-fade {
+  opacity: 0;
 }

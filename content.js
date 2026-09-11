@@ -258,34 +258,12 @@ function pushInteraction(action, label) {
   }
 }
 
-// Draws a red outline around the clicked/filled element while Registrar
-// Processo is recording, so the step screenshot shows exactly where the user
+// Draws a brief red outline around the clicked/filled element while Registrar
+// Processo is recording, so the step screenshot (taken a moment later, once
+// the trace event round-trips to background.js) shows exactly where the user
 // acted - not just what the screen looked like. Purely visual/local: it never
 // reads or sends the element's content, only its on-screen position.
-//
-// Timing is tied to the actual capture, not a guess: emitPerformanceTrace()'s
-// chrome.runtime.sendMessage only resolves once background.js has awaited
-// captureStepScreenshot() to completion, so callers keep the box up until
-// that promise settles (finishHighlight), then clear it. A fixed short timer
-// isn't enough here - a click that opens a new screen or a big panel can take
-// longer than expected to render, and/or the request can sit behind Chrome's
-// captureVisibleTab rate limit when a "navigation" screenshot follows right
-// behind (e.g. a tile click that also opens a new screen); either way the
-// highlight needs to survive until the capture is confirmed done.
-let currentHighlightBox = null;
-let currentHighlightSafetyTimer = null;
-
-function removeHighlight() {
-  window.clearTimeout(currentHighlightSafetyTimer);
-  currentHighlightSafetyTimer = null;
-  if (currentHighlightBox) {
-    currentHighlightBox.remove();
-    currentHighlightBox = null;
-  }
-}
-
 function flashHighlight(el) {
-  removeHighlight();
   if (!(el instanceof Element)) {
     return;
   }
@@ -305,17 +283,8 @@ function flashHighlight(el) {
   box.style.width = `${rect.width + 6}px`;
   box.style.height = `${rect.height + 6}px`;
   document.body.appendChild(box);
-  currentHighlightBox = box;
-  // Safety net only - covers a trace round-trip that never resolves (e.g.
-  // the recording gets stopped mid-flight), so a box never gets stuck.
-  currentHighlightSafetyTimer = window.setTimeout(removeHighlight, 6000);
-}
-
-// Called once the trace event's round-trip (and therefore the screenshot
-// capture, if any) has settled. Keeps the box up a beat longer so a
-// near-instant capture is still visibly flashed for the person recording.
-function finishHighlight() {
-  window.setTimeout(removeHighlight, 150);
+  window.setTimeout(() => box.classList.add("tex-record-highlight-fade"), 500);
+  window.setTimeout(() => box.remove(), 900);
 }
 
 function describeField(el) {
@@ -378,7 +347,7 @@ document.addEventListener(
       origin: window.location.origin,
       action: "click",
       label
-    }).then(finishHighlight);
+    });
   },
   true
 );
@@ -420,7 +389,7 @@ document.addEventListener(
       action: "input",
       label,
       value: String(value ?? "").slice(0, 200)
-    }).then(finishHighlight);
+    });
   },
   true
 );
