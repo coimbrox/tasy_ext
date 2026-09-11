@@ -21,7 +21,7 @@ Enquanto você navega pelo TASY com os overlays de **Detalhes de campo**/**Detal
 No popup, em **Registrar Processo**, um único botão liga e desliga a gravação:
 
 - **Iniciar registro**: zera o log e começa a registrar, em ordem cronológica: cada tela aberta no TASY, cliques em botões/links e valores preenchidos em campos (exceto campos de senha). Internamente também mede cada requisição real (fetch/XHR) e a latência de rede, usados só para detectar oscilação/lentidão — essas linhas não entram no texto copiado, que fica focado no passo a passo.
-- Execute normalmente o processo que quer documentar (ex.: criar um usuário).
+- Execute normalmente o processo que quer documentar (ex.: criar um usuário). A cada clique/campo preenchido, um contorno vermelho pisca ao redor do elemento (`.tex-record-highlight`) — é puramente visual/local (só a posição em tela, nunca o conteúdo) e fica registrado na imagem daquele passo, marcando onde você agiu.
 - **Parar registro**: tira um **print final da tela como ela está no momento em que você para** (adicionado como passo "🏁 Fim do registro" — cobre o resultado do processo, que nenhum clique captura), copia para a área de transferência um resumo legível de tudo que aconteceu na aba ativa, e baixa um relatório `.html` com o mesmo passo a passo, incluindo um print da tela a cada passo — pronto para anexar num chamado de suporte (ex.: Philips). Exemplo do texto copiado:
   ```
   [14:32:10] 🖥️ Tela aberta: Cadastro de Usuários

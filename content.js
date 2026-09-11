@@ -258,6 +258,35 @@ function pushInteraction(action, label) {
   }
 }
 
+// Draws a brief red outline around the clicked/filled element while Registrar
+// Processo is recording, so the step screenshot (taken a moment later, once
+// the trace event round-trips to background.js) shows exactly where the user
+// acted - not just what the screen looked like. Purely visual/local: it never
+// reads or sends the element's content, only its on-screen position.
+function flashHighlight(el) {
+  if (!(el instanceof Element)) {
+    return;
+  }
+  let rect;
+  try {
+    rect = el.getBoundingClientRect();
+  } catch (_error) {
+    return;
+  }
+  if (!rect || (rect.width <= 0 && rect.height <= 0)) {
+    return;
+  }
+  const box = document.createElement("div");
+  box.className = "tex-record-highlight";
+  box.style.top = `${Math.max(rect.top - 3, 0)}px`;
+  box.style.left = `${Math.max(rect.left - 3, 0)}px`;
+  box.style.width = `${rect.width + 6}px`;
+  box.style.height = `${rect.height + 6}px`;
+  document.body.appendChild(box);
+  window.setTimeout(() => box.classList.add("tex-record-highlight-fade"), 500);
+  window.setTimeout(() => box.remove(), 900);
+}
+
 function describeField(el) {
   const container = el.closest(".w-attr-container[w-attr-name]");
   if (container) {
@@ -309,6 +338,8 @@ document.addEventListener(
       return;
     }
 
+    flashHighlight(event.target.closest("button, a, [role='button']"));
+
     void emitPerformanceTrace({
       kind: "interaction",
       timestamp: new Date().toISOString(),
@@ -338,6 +369,8 @@ document.addEventListener(
     if (!traceActive) {
       return;
     }
+
+    flashHighlight(target);
 
     let value;
     if (target instanceof HTMLSelectElement) {
