@@ -64,6 +64,10 @@
   top: -11px;
   display: flex;
   gap: 3px;
+  /* Sem z-index o rótulo (que invade 11px acima do campo) ficava por baixo dos
+     campos vizinhos que vêm depois no DOM, e só "aparecia" ao mudar o zoom do
+     navegador. Acima do conteúdo do Tasy, abaixo de modais e dropdowns dele. */
+  z-index: 100;
 }
 
 .tex-field-attr-container ~ .w-attr-container__content--inline {
@@ -82,6 +86,7 @@
   position: absolute;
   top: 25px;
   left: 6px;
+  z-index: 100;
 }
 
 /* --- Recentes ------------------------------------------------------------ */
@@ -179,7 +184,7 @@
   gap: 4px;
   top: 5px;
   left: 5px;
-  z-index: 3;
+  z-index: 100;
 }
 
 /* Compact rows (short panels, e.g. CPOE's stacked category swimlanes) don't
@@ -474,7 +479,7 @@
   right: 16px;
   bottom: 16px;
   z-index: 2147483000;
-  width: 440px;
+  width: 560px;
   max-width: 90vw;
   max-height: 42vh;
   display: flex;
@@ -536,8 +541,39 @@
   background: rgba(34, 197, 94, 0.25);
 }
 
+.tex-waterfall-summary {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: rgba(241, 245, 249, 0.7);
+  border-bottom: 1px solid rgba(241, 245, 249, 0.1);
+}
+
+.tex-waterfall-summary b {
+  color: #F1F5F9;
+}
+
+.tex-waterfall-method {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(241, 245, 249, 0.12);
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 10px;
+}
+
+.tex-waterfall-status {
+  flex: 0 0 34px;
+  text-align: center;
+  font-family: "Consolas", "Courier New", monospace;
+  color: #4ADE80;
+}
+
+.tex-waterfall-row.bad .tex-waterfall-status {
+  color: #F87171;
+}
+
 .tex-waterfall-label {
-  flex: 0 0 150px;
+  flex: 0 0 200px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

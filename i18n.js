@@ -210,6 +210,15 @@
     waterfall_header: { pt: "Rede — últimas chamadas", en: "Network — recent calls" },
     waterfall_close_title: { pt: "Fechar", en: "Close" },
     waterfall_empty: { pt: "Sem chamadas registradas ainda.", en: "No calls recorded yet." },
+    waterfall_summary: {
+      pt: "{{total}} chamadas · {{errors}} com erro · {{services}} serviços · mais lenta: <b>{{slowName}}</b> ({{slowMs}}ms)",
+      en: "{{total}} calls · {{errors}} failed · {{services}} services · slowest: <b>{{slowName}}</b> ({{slowMs}}ms)"
+    },
+    waterfall_tip_start: { pt: "início", en: "start" },
+    waterfall_tip_group: { pt: "neste serviço", en: "for this service" },
+    waterfall_tip_calls: { pt: "chamadas", en: "calls" },
+    waterfall_tip_avg: { pt: "média", en: "avg" },
+    waterfall_tip_max: { pt: "máx", en: "max" },
 
     env_node_word: { pt: "nó", en: "node" },
     recent_feature_remove_title: { pt: "Remover item", en: "Remove item" },

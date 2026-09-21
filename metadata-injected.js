@@ -1687,14 +1687,20 @@
   }
 
   // --- Waterfall de rede: mini timeline of the recent real requests --------
-  function waterfallShortUrl(rawUrl) {
+  // Nome do "serviço" de uma chamada: os dois últimos segmentos do caminho que
+  // não sejam ids (números, UUIDs, hashes longos) nem prefixos genéricos. Serve
+  // para agrupar chamadas do mesmo serviço e comparar tempos entre elas.
+  const WATERFALL_GENERIC_SEGMENTS = new Set(["tasyappserver", "resources", "rest", "api", "services", "service"]);
+  function waterfallServiceName(rawUrl) {
     try {
       const u = new URL(rawUrl, window.location.href);
-      const segs = u.pathname.split("/").filter(Boolean).slice(-2).join("/");
-      const firstParam = u.search ? u.search.replace(/^\?/, "").split("&")[0] : "";
-      return "/" + segs + (firstParam ? "?" + firstParam : "");
+      const segs = u.pathname
+        .split("/")
+        .filter(Boolean)
+        .filter((s) => !/^\d+$/.test(s) && !/^[0-9a-f-]{16,}$/i.test(s) && !WATERFALL_GENERIC_SEGMENTS.has(s.toLowerCase()));
+      return segs.slice(-2).join("/") || u.pathname || "/";
     } catch (_error) {
-      return String(rawUrl || "").slice(0, 80);
+      return String(rawUrl || "").slice(0, 60);
     }
   }
 
@@ -1736,38 +1742,77 @@
       const t0 = Math.min(...times);
       const span = Math.max(1, ...calls.map((c, i) => times[i] - t0 + (c.durationMs || 0)));
       const maxDur = Math.max(1, ...calls.map((c) => c.durationMs || 0));
-      body.innerHTML = calls
-        .map((c, i) => {
-          const start = times[i] - t0;
-          const dur = c.durationMs || 0;
-          const left = (start / span) * 100;
-          const width = Math.max(1.5, (dur / span) * 100);
-          const slow = dur >= 800 || (dur === maxDur && dur > 250);
-          const bad = c.ok === false || (typeof c.httpStatus === "number" && c.httpStatus >= 400);
-          const label = (c.method || "") + " " + waterfallShortUrl(c.url);
-          return (
-            '<div class="tex-waterfall-row' +
-            (slow ? " slow" : "") +
-            (bad ? " bad" : "") +
-            '" data-i="' +
-            i +
-            '" title="' +
-            texEscape(label + "  ·  HTTP " + (c.httpStatus || "?") + "  ·  " + dur + "ms") +
-            '">' +
-            '<span class="tex-waterfall-label">' +
-            texEscape(label) +
-            "</span>" +
-            '<span class="tex-waterfall-track"><span class="tex-waterfall-bar" style="left:' +
-            left.toFixed(1) +
-            "%;width:" +
-            width.toFixed(1) +
-            '%"></span></span>' +
-            '<span class="tex-waterfall-ms">' +
-            dur +
-            "ms</span></div>"
-          );
-        })
-        .join("");
+      const isBad = (c) => c.ok === false || (typeof c.httpStatus === "number" && c.httpStatus >= 400);
+
+      // estatística por serviço, para o tooltip e o resumo do topo
+      const groups = new Map();
+      calls.forEach((c) => {
+        const name = waterfallServiceName(c.url);
+        const g = groups.get(name) || { count: 0, total: 0, max: 0 };
+        const d = c.durationMs || 0;
+        g.count += 1;
+        g.total += d;
+        g.max = Math.max(g.max, d);
+        groups.set(name, g);
+      });
+      const slowest = calls.reduce((a, c) => ((c.durationMs || 0) > (a.durationMs || 0) ? c : a), calls[0]);
+      const summary = TasyI18n.t("waterfall_summary", {
+        total: calls.length,
+        errors: calls.filter(isBad).length,
+        services: groups.size,
+        slowName: texEscape(waterfallServiceName(slowest.url)),
+        slowMs: slowest.durationMs || 0
+      });
+
+      body.innerHTML =
+        '<div class="tex-waterfall-summary">' +
+        summary +
+        "</div>" +
+        calls
+          .map((c, i) => {
+            const start = times[i] - t0;
+            const dur = c.durationMs || 0;
+            const left = (start / span) * 100;
+            const width = Math.max(1.5, (dur / span) * 100);
+            const slow = dur >= 800 || (dur === maxDur && dur > 250);
+            const bad = isBad(c);
+            const method = c.method || "GET";
+            const service = waterfallServiceName(c.url);
+            const g = groups.get(service);
+            const tip = [
+              method + " " + (c.url || ""),
+              "HTTP " + (c.httpStatus || "ERR") + "  ·  " + dur + "ms  ·  " + TasyI18n.t("waterfall_tip_start") + " +" + start + "ms",
+              service + " — " + g.count + " " + TasyI18n.t("waterfall_tip_calls") + ", " + TasyI18n.t("waterfall_tip_avg") + " " + Math.round(g.total / g.count) + "ms, " + TasyI18n.t("waterfall_tip_max") + " " + g.max + "ms"
+            ].join("\n");
+            return (
+              '<div class="tex-waterfall-row' +
+              (slow ? " slow" : "") +
+              (bad ? " bad" : "") +
+              '" data-i="' +
+              i +
+              '" title="' +
+              texEscape(tip) +
+              '">' +
+              '<span class="tex-waterfall-method">' +
+              texEscape(method) +
+              "</span>" +
+              '<span class="tex-waterfall-label">' +
+              texEscape(service) +
+              "</span>" +
+              '<span class="tex-waterfall-status">' +
+              (c.httpStatus || "ERR") +
+              "</span>" +
+              '<span class="tex-waterfall-track"><span class="tex-waterfall-bar" style="left:' +
+              left.toFixed(1) +
+              "%;width:" +
+              width.toFixed(1) +
+              '%"></span></span>' +
+              '<span class="tex-waterfall-ms">' +
+              dur +
+              "ms</span></div>"
+            );
+          })
+          .join("");
       body.querySelectorAll(".tex-waterfall-row").forEach((row) => {
         row.addEventListener("click", () => {
           const call = this.calls[Number(row.dataset.i)];
