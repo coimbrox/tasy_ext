@@ -56,7 +56,7 @@
 .tex-json-null { color: #999999; }
 
 .tex-form-mdetail > :first-child {
-  padding-top: 12px;
+  padding-top: 4px;
 }
 
 .tex-field-attr-container {
@@ -64,9 +64,6 @@
   top: -11px;
   display: flex;
   gap: 3px;
-  /* Sem z-index o rótulo (que invade 11px acima do campo) ficava por baixo dos
-     campos vizinhos que vêm depois no DOM, e só "aparecia" ao mudar o zoom do
-     navegador. Acima do conteúdo do Tasy, abaixo de modais e dropdowns dele. */
   z-index: 100;
 }
 
@@ -74,19 +71,15 @@
   margin-top: 0;
 }
 
-.tex-slick-pane-top {
-  top: 51px !important;
-}
-
-.tex-slick-header-column.tex-slick-header-column.tex-slick-header-column {
-  height: 48px !important;
-}
-
 .tex-grid-label {
   position: absolute;
-  top: 25px;
-  left: 6px;
+  bottom: 2px;
+  left: 4px;
   z-index: 100;
+  font-size: 10px;
+  line-height: 10px;
+  padding: 1px 3px;
+  opacity: 0.95;
 }
 
 /* --- Recentes ------------------------------------------------------------ */

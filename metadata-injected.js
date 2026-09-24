@@ -268,8 +268,17 @@
         target.innerText = previousText;
         delete target.dataset.copyFeedback;
       }, 700);
-    }).catch(() => {});
+    }).catch(() => { });
   });
+
+  const sentDictionaryKeys = new Set();
+  function sendDictionaryEntry(entry) {
+    if (!entry || !entry.kind || !entry.name) return;
+    const key = `${entry.kind}:${entry.name}:${entry.label || ""}`;
+    if (sentDictionaryKeys.has(key)) return;
+    sentDictionaryKeys.add(key);
+    sendToBridge("DICTIONARY_ENTRY", { entry });
+  }
 
   // --- render engine --------------------------------------------------------
   class Renderer {
@@ -299,8 +308,30 @@
       this._options = options || {};
       this._renderers.forEach((renderer) => renderer.debouncedRender(this._options));
     }
+    _isSelfMutation(mutation) {
+      const target = mutation.target;
+      if (target && target.classList && [...target.classList].some((c) => typeof c === "string" && c.startsWith("tex-"))) {
+        return true;
+      }
+      if (mutation.type === "childList") {
+        for (const node of mutation.addedNodes.values()) {
+          if (node.nodeType === 1 && node.classList && [...node.classList].some((c) => typeof c === "string" && c.startsWith("tex-"))) {
+            return true;
+          }
+        }
+        for (const node of mutation.removedNodes.values()) {
+          if (node.nodeType === 1 && node.classList && [...node.classList].some((c) => typeof c === "string" && c.startsWith("tex-"))) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
     _onMutations(mutations) {
       for (const mutation of mutations) {
+        if (this._isSelfMutation(mutation)) {
+          continue;
+        }
         this._renderers.forEach((renderer) => {
           if (renderer.condition(mutation)) {
             renderer.debouncedRender(this._options);
@@ -326,7 +357,7 @@
           if (node.classList && node.classList.contains("w-attr-container")) {
             return true;
           }
-          if (node.querySelector(".w-attr-container")) {
+          if (node.querySelector && node.querySelector(".w-attr-container")) {
             return true;
           }
         }
@@ -337,11 +368,14 @@
       document.querySelectorAll("form.w-mdetail__container").forEach((form) => {
         form.classList.toggle("tex-form-mdetail", Boolean(showFieldDetails));
       });
-      document.querySelectorAll(".tex-field-attr-container").forEach((el) => el.remove());
       if (!showFieldDetails) {
+        document.querySelectorAll(".tex-field-attr-container").forEach((el) => el.remove());
         return;
       }
       document.querySelectorAll(".w-attr-container[w-attr-name]").forEach((container) => {
+        if (container.querySelector(".tex-field-attr-container")) {
+          return;
+        }
         const attrName = container.getAttribute("w-attr-name");
         const locatorValue = [...container.querySelectorAll(".textbox-locator-container, .w-listbox")].reduce(
           (_acc, el) => {
@@ -359,7 +393,7 @@
         container.insertAdjacentElement("afterbegin", wrapper);
 
         const label = container.querySelector(".w-attr-container__label")?.innerText?.trim();
-        sendToBridge("DICTIONARY_ENTRY", { entry: { kind: "field", name: attrName, label: label || null } });
+        sendDictionaryEntry({ kind: "field", name: attrName, label: label || null });
       });
     }
     _createLabel(text) {
@@ -384,35 +418,25 @@
         if (node.classList && node.classList.contains("slick-header-column")) {
           return true;
         }
-        if (node.querySelector(".slick-header-column")) {
+        if (node.querySelector && node.querySelector(".slick-header-column")) {
           return true;
         }
       }
       return false;
     }
     render({ showGridDetails }) {
-      document.querySelectorAll(".tex-grid-label").forEach((el) => el.remove());
-      document.querySelectorAll(".slick-pane-top").forEach((el) => {
-        el.classList.toggle("tex-slick-pane-top", Boolean(showGridDetails));
-      });
-      document.querySelectorAll(".slick-header-column").forEach((el) => {
-        el.classList.toggle("tex-slick-header-column", Boolean(showGridDetails));
-      });
-      document.querySelectorAll(".slick-viewport-top[data-original-height]").forEach((el) => {
-        el.style.height = `${el.dataset.originalHeight}px`;
-        el.removeAttribute("data-original-height");
-      });
       if (!showGridDetails) {
+        document.querySelectorAll(".tex-grid-label").forEach((el) => el.remove());
         return;
       }
-      document.querySelectorAll(".slick-viewport-top").forEach((el) => {
-        if (!el.dataset.originalHeight) {
-          el.dataset.originalHeight = el.style.height.replace(/\D+/g, "");
-          el.style.height = `${Number(el.dataset.originalHeight) - 20}px`;
-        }
-      });
       document.querySelectorAll(".slick-header-column").forEach((el) => {
+        if (el.querySelector(".tex-grid-label")) {
+          return;
+        }
         const columnName = el.id.replace(/^slickgrid_\d+_?/, "");
+        if (!columnName) {
+          return;
+        }
         const headerText = el.innerText?.trim();
         const label = document.createElement("span");
         label.classList.add("tex-fellow-label", "tex-grid-label", "tex-copy-me");
@@ -420,9 +444,7 @@
         label.title = columnName;
         el.appendChild(label);
 
-        sendToBridge("DICTIONARY_ENTRY", {
-          entry: { kind: "grid-column", name: columnName, label: headerText || null }
-        });
+        sendDictionaryEntry({ kind: "grid-column", name: columnName, label: headerText || null });
       });
     }
   }
@@ -474,14 +496,11 @@
   ];
 
   class PanelDetailsRenderer extends Renderer {
-    condition({ type, target, addedNodes }) {
+    condition({ type, addedNodes }) {
       if (type !== "childList") {
         return false;
       }
       for (const { containerClass } of PANEL_EXTRACTORS) {
-        if (target.classList && target.classList.contains(containerClass) && !target.querySelector(".tex-panel-info-container")) {
-          return true;
-        }
         for (const node of addedNodes.values()) {
           if (!node.querySelectorAll) {
             continue;
@@ -489,7 +508,7 @@
           if (node.classList && node.classList.contains(containerClass)) {
             return true;
           }
-          if (node.querySelector(`.${containerClass}`)) {
+          if (node.querySelector && node.querySelector(`.${containerClass}`)) {
             return true;
           }
         }
@@ -497,14 +516,14 @@
       return false;
     }
     render({ showPanelDetails }) {
-      document.querySelectorAll(".tex-panel-info-container").forEach((el) => el.remove());
       if (!showPanelDetails) {
+        document.querySelectorAll(".tex-panel-info-container").forEach((el) => el.remove());
         return;
       }
       PANEL_EXTRACTORS.forEach(({ containerClass, targetClass, extractor }) => {
         [...document.getElementsByClassName(containerClass)].forEach((container) => {
           const target = targetClass ? container.querySelector(`.${targetClass}`) : container;
-          if (!target) {
+          if (!target || target.querySelector(".tex-panel-info-container")) {
             return;
           }
           const scope = angularScope(container);
@@ -519,9 +538,7 @@
           }
           const { code, type, view, table } = extracted;
           if (code && table) {
-            sendToBridge("DICTIONARY_ENTRY", {
-              entry: { kind: "panel", name: String(code), label: table, table, view: view ?? null }
-            });
+            sendDictionaryEntry({ kind: "panel", name: String(code), label: table, table, view: view ?? null });
           }
           const info = document.createElement("div");
           info.classList.add("tex-panel-info-container");
@@ -888,8 +905,16 @@
       super();
       this.inspector = new Inspector();
     }
-    condition() {
-      return true;
+    condition({ type, addedNodes }) {
+      if (type !== "childList") {
+        return false;
+      }
+      for (const node of addedNodes.values()) {
+        if (node.nodeType === 1) {
+          return true;
+        }
+      }
+      return false;
     }
     render({ inspectMode, recentFeatures }) {
       this.inspector.recentFeatures = recentFeatures;
@@ -1011,16 +1036,16 @@
     const feature = Array.isArray(recentFeatures) ? recentFeatures[0] : null;
     lines.push(
       "FUNÇÃO: " +
-        (feature ? (feature.code ? "[" + feature.code + "] " : "") + (feature.caption || feature.name || "") : tabName || document.title || "?")
+      (feature ? (feature.code ? "[" + feature.code + "] " : "") + (feature.caption || feature.name || "") : tabName || document.title || "?")
     );
 
     const panel = nearestPanelInfo(el);
     if (panel) {
       lines.push(
         "PAINEL: " +
-          [panel.code ? "código " + panel.code : "", panel.view ? "view " + panel.view : "", panel.table ? "tabela " + panel.table : ""]
-            .filter(Boolean)
-            .join(" · ")
+        [panel.code ? "código " + panel.code : "", panel.view ? "view " + panel.view : "", panel.table ? "tabela " + panel.table : ""]
+          .filter(Boolean)
+          .join(" · ")
       );
     }
 
@@ -1289,7 +1314,7 @@
             width: formatBrNumber(state.width),
             height: formatBrNumber(state.height)
           });
-          navigator.clipboard.writeText(text).catch(() => {});
+          navigator.clipboard.writeText(text).catch(() => { });
           copyBtn.innerText = TasyI18n.t("btn_copied");
           window.setTimeout(() => {
             copyBtn.innerText = TasyI18n.t("btn_copy");
@@ -1474,7 +1499,7 @@
       const estabSuffix = establishment ? ` · ${establishment}` : "";
 
       if (!match && !establishment) {
-        document.documentElement.style.outline = "";
+        document.body.style.outline = "";
         document.querySelector(".tex-env-badge")?.remove();
         return;
       }
@@ -1488,15 +1513,15 @@
       }
 
       if (match) {
-        document.documentElement.style.outline = `4px solid ${match.color}`;
-        document.documentElement.style.outlineOffset = "-4px";
+        document.body.style.outline = `4px solid ${match.color}`;
+        document.body.style.outlineOffset = "-4px";
         badge.style.backgroundColor = match.color;
         badge.style.color = pickReadableTextColor(match.color);
         badge.innerText = (match.label || match.match) + estabSuffix + nodeSuffix;
       } else {
         // No environment rule for this host, but the user wants the
         // establishment shown - neutral badge, no screen border.
-        document.documentElement.style.outline = "";
+        document.body.style.outline = "";
         badge.style.backgroundColor = "#475569";
         badge.style.color = "#FFFFFF";
         badge.innerText = establishment + nodeSuffix;
@@ -1817,7 +1842,7 @@
         row.addEventListener("click", () => {
           const call = this.calls[Number(row.dataset.i)];
           if (call && call.url) {
-            navigator.clipboard.writeText(call.url).catch(() => {});
+            navigator.clipboard.writeText(call.url).catch(() => { });
             row.classList.add("copied");
             window.setTimeout(() => row.classList.remove("copied"), 500);
           }
