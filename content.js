@@ -24,6 +24,47 @@ function isTasyHostname(hostname) {
   return typeof hostname === "string" && hostname.toLowerCase().includes("tasy");
 }
 
+// Extra hosts the user allowed in the popup ("Domínios adicionais") - for
+// bases reached by IP or by a hostname that doesn't contain "tasy".
+// Entries: "10.0.0.5", "10.0.0.5:8080", "hml.hospital.local", "10.0.1.*".
+const CUSTOM_HOSTS_KEY = "customHosts";
+let customHostsCache = null;
+
+function normalizeHostEntry(entry) {
+  let value = String(entry || "").trim().toLowerCase();
+  value = value.replace(/^[a-z]+:\/\//, "").split(/[/?#]/)[0];
+  return value;
+}
+
+function hostMatchesEntry(entry, loc) {
+  const normalized = normalizeHostEntry(entry);
+  if (!normalized) {
+    return false;
+  }
+  // With a port -> compare against host:port; without -> hostname only.
+  const target = normalized.includes(":") ? String(loc.host).toLowerCase() : String(loc.hostname).toLowerCase();
+  if (normalized.includes("*")) {
+    const pattern = normalized.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+    return new RegExp(`^${pattern}$`).test(target);
+  }
+  return target === normalized;
+}
+
+async function isAllowedHost() {
+  if (isTasyHostname(window.location.hostname)) {
+    return true;
+  }
+  if (customHostsCache === null) {
+    try {
+      const data = await chrome.storage.local.get([CUSTOM_HOSTS_KEY]);
+      customHostsCache = Array.isArray(data[CUSTOM_HOSTS_KEY]) ? data[CUSTOM_HOSTS_KEY] : [];
+    } catch (_error) {
+      customHostsCache = [];
+    }
+  }
+  return customHostsCache.some((entry) => hostMatchesEntry(entry, window.location));
+}
+
 function pushPerformanceSample(latencyMs) {
   performanceSamples.push(latencyMs);
   if (performanceSamples.length > PERFORMANCE_SAMPLE_LIMIT) {
@@ -218,7 +259,7 @@ function stopPerformanceMonitor() {
 }
 
 async function syncTraceActiveState() {
-  if (!isTasyHostname(window.location.hostname)) {
+  if (!(await isAllowedHost())) {
     return;
   }
 
@@ -426,7 +467,7 @@ const LANGUAGE_KEY = "language";
 let serverNodeInfo = null;
 
 async function loadServerNode() {
-  if (!isTasyHostname(window.location.hostname)) {
+  if (!(await isAllowedHost())) {
     return;
   }
   try {
@@ -441,7 +482,7 @@ async function loadServerNode() {
 }
 
 async function sendMetadataOptions() {
-  if (!isTasyHostname(window.location.hostname)) {
+  if (!(await isAllowedHost())) {
     return;
   }
 
@@ -1324,6 +1365,13 @@ window.addEventListener("message", (event) => {
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== "local") {
     return;
+  }
+
+  if (CUSTOM_HOSTS_KEY in changes) {
+    customHostsCache = null;
+    void sendMetadataOptions();
+    void syncTraceActiveState();
+    void loadServerNode();
   }
 
   const relevantKeys = [...METADATA_OPTION_KEYS, RECENT_FEATURES_KEY, ENVIRONMENT_RULES_KEY, SHOW_ESTABLISHMENT_KEY, LANGUAGE_KEY];

@@ -214,6 +214,59 @@ showEstablishmentEl.addEventListener("change", async () => {
   await chrome.storage.local.set({ showEstablishment: showEstablishmentEl.checked });
 });
 
+// --- Custom hosts (IP / domains without "tasy") -----------------------------
+
+const CUSTOM_HOSTS_KEY = "customHosts";
+const customHostsEl = document.getElementById("customHosts");
+const addCurrentHostBtn = document.getElementById("addCurrentHostBtn");
+
+function parseCustomHosts(text) {
+  const seen = new Set();
+  return String(text || "")
+    .split(/[\n,;\s]+/)
+    .map((entry) => entry.trim().toLowerCase().replace(/^[a-z]+:\/\//, "").split(/[/?#]/)[0])
+    .filter((entry) => entry && !seen.has(entry) && seen.add(entry));
+}
+
+async function loadCustomHosts() {
+  const data = await chrome.storage.local.get([CUSTOM_HOSTS_KEY]);
+  const list = Array.isArray(data[CUSTOM_HOSTS_KEY]) ? data[CUSTOM_HOSTS_KEY] : [];
+  customHostsEl.value = list.join("\n");
+}
+
+async function saveCustomHosts() {
+  const list = parseCustomHosts(customHostsEl.value);
+  await chrome.storage.local.set({ [CUSTOM_HOSTS_KEY]: list });
+  return list;
+}
+
+customHostsEl.addEventListener("change", async () => {
+  const list = await saveCustomHosts();
+  customHostsEl.value = list.join("\n");
+  setStatus(t("status_custom_hosts_saved"), "ok");
+});
+
+addCurrentHostBtn.addEventListener("click", async () => {
+  const tab = await getActiveTab();
+  let host = "";
+  try {
+    const parsed = new URL(tab && tab.url);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      host = parsed.host.toLowerCase();
+    }
+  } catch (_error) {
+    host = "";
+  }
+  if (!host) {
+    setStatus(t("status_current_host_invalid"), "error");
+    return;
+  }
+  const list = parseCustomHosts(customHostsEl.value + "\n" + host);
+  customHostsEl.value = list.join("\n");
+  await chrome.storage.local.set({ [CUSTOM_HOSTS_KEY]: list });
+  setStatus(t("status_current_host_added", { host }), "ok");
+});
+
 function setStatus(message, type = "") {
   statusEl.textContent = message;
   statusEl.className = `status ${type}`.trim();
@@ -928,6 +981,7 @@ explorerCopyBtn.addEventListener("click", async () => {
     await loadTraceState();
     await loadEnvironmentRules();
     await loadShowEstablishment();
+    await loadCustomHosts();
     await loadAppServerBase();
     await renderErrorCaptureList();
     await loadServerNodeInfo();

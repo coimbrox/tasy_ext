@@ -50,6 +50,16 @@
       en: "Useful for multi-establishment installs. If there's no color rule for the domain, shows a gray label with just the establishment."
     },
 
+    section_custom_hosts: { pt: "Domínios adicionais", en: "Additional domains" },
+    custom_hosts_hint: {
+      pt: 'Por padrão a extensão só roda quando o domínio contém "tasy". Adicione aqui IPs ou domínios de outras bases (um por linha). Ex.: 10.0.0.5, 10.0.0.5:8080, 10.0.1.*',
+      en: 'By default the extension only runs when the domain contains "tasy". Add IPs or domains of other environments here (one per line). E.g. 10.0.0.5, 10.0.0.5:8080, 10.0.1.*'
+    },
+    btn_add_current_host: { pt: "+ Adicionar site atual", en: "+ Add current site" },
+    status_custom_hosts_saved: { pt: "Domínios salvos. Recarregue a aba do TASY (F5).", en: "Domains saved. Reload the TASY tab (F5)." },
+    status_current_host_added: { pt: "{{host}} adicionado. Recarregue a aba (F5).", en: "{{host}} added. Reload the tab (F5)." },
+    status_current_host_invalid: { pt: "A aba ativa não é um site http/https.", en: "The active tab isn't an http/https site." },
+
     section_register_process: { pt: "Registrar Processo", en: "Record Process" },
     register_hint: {
       pt: 'Inicie antes de executar o processo que quer documentar (ex.: criar um usuário). Ao parar, o passo a passo é copiado automaticamente e um relatório em HTML (com prints de cada passo) é baixado — pronto para anexar num chamado.',

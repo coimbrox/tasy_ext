@@ -107,7 +107,12 @@
     sendToBridge("API_CALL", { entry });
   }
 
-  if (isTasyHost()) {
+  let apiPatchesInstalled = false;
+  function installApiCallPatches() {
+    if (apiPatchesInstalled) {
+      return;
+    }
+    apiPatchesInstalled = true;
     const originalFetch = window.fetch;
     if (typeof originalFetch === "function") {
       window.fetch = function patchedFetch(input, init) {
@@ -181,6 +186,10 @@
         return originalSend.apply(this, args);
       };
     }
+  }
+
+  if (isTasyHost()) {
+    installApiCallPatches();
   }
 
   // Runs on the leading edge (so badges show up immediately on the first
@@ -2035,6 +2044,9 @@
       return;
     }
     if (data.type === "OPTIONS") {
+      // content.js only sends OPTIONS when the host is allowed (contains
+      // "tasy" or is in the user's custom host list).
+      installApiCallPatches();
       const opts = data.options || {};
       if (typeof TasyI18n._installStrings === "function" && opts.i18nStrings) {
         TasyI18n._installStrings(opts.i18nStrings);

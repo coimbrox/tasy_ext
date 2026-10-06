@@ -91,6 +91,16 @@
         <p class="trace-hint" data-i18n="establishment_hint">Útil em instalações multi-estabelecimento. Se não houver regra de cor para o domínio, mostra uma etiqueta cinza só com o estabelecimento.</p>
       </div>
 
+      <div class="section-title" data-i18n="section_custom_hosts">Domínios adicionais</div>
+
+      <div class="field">
+        <p class="trace-hint" data-i18n="custom_hosts_hint">Por padrão a extensão só roda quando o domínio contém "tasy". Adicione aqui IPs ou domínios de outras bases (um por linha). Ex.: 10.0.0.5, 10.0.0.5:8080, 10.0.1.*</p>
+        <textarea id="customHosts" rows="3" placeholder="10.0.0.5:8080" spellcheck="false"></textarea>
+        <div class="actions">
+          <button id="addCurrentHostBtn" type="button" data-i18n="btn_add_current_host">+ Adicionar site atual</button>
+        </div>
+      </div>
+
       <div class="section-title" data-i18n="section_register_process">Registrar Processo</div>
 
       <div class="field">

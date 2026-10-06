@@ -114,6 +114,31 @@ async function fetchAppServerText(url) {
   }
 }
 
+// Custom host allowlist ("Domínios adicionais" in the popup) - same rules as
+// content.js: exact hostname, hostname:port, or a `*` wildcard.
+async function isCustomHost(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch (_error) {
+    return false;
+  }
+  const data = await chrome.storage.local.get(["customHosts"]);
+  const entries = Array.isArray(data.customHosts) ? data.customHosts : [];
+  return entries.some((entry) => {
+    const normalized = String(entry || "").trim().toLowerCase().replace(/^[a-z]+:\/\//, "").split(/[/?#]/)[0];
+    if (!normalized) {
+      return false;
+    }
+    const target = normalized.includes(":") ? parsed.host.toLowerCase() : parsed.hostname.toLowerCase();
+    if (normalized.includes("*")) {
+      const pattern = normalized.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+      return new RegExp(`^${pattern}$`).test(target);
+    }
+    return target === normalized;
+  });
+}
+
 // Reads the app-server node from the session cookie. Wheb encodes it in the
 // JSESSIONID value as `tasy-tasyappserver-<instance>_<NODE>~<sessionHash>` -
 // e.g. ..._1114~3ADAA... means node 1114. The cookie is HttpOnly, so this
@@ -126,7 +151,7 @@ async function getServerNode(url) {
   } catch (_error) {
     return { ok: false, reason: "invalid_url" };
   }
-  if (!/tasy/i.test(host)) {
+  if (!/tasy/i.test(host) && !(await isCustomHost(url))) {
     return { ok: true, found: false };
   }
   try {
