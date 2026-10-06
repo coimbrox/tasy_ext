@@ -451,6 +451,7 @@ const METADATA_OPTION_KEYS = [
   "showReportLayout",
   "showWaterfall",
   "menuFilter",
+  "largeEditor",
   "captureErrors"
 ];
 const RECENT_FEATURES_KEY = "recentFeatures";

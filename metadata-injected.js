@@ -2023,6 +2023,199 @@
     }
   }
 
+  // --- Large editor: "⤢" button on Tasy textareas (report SQL, etc.) -------
+  // Opens the field's text in a big monospace editor overlay. "Aplicar" writes
+  // it back to the original textarea and fires input/change/blur so Tasy's
+  // AngularJS model (and its validations) pick the new value up.
+  class LargeEditorRenderer extends Renderer {
+    constructor() {
+      super();
+      this._enabled = false;
+      this._overlay = null;
+    }
+    condition({ type, addedNodes }) {
+      if (!this._enabled || type !== "childList") {
+        return false;
+      }
+      for (const node of addedNodes.values()) {
+        if (node.nodeType !== 1) {
+          continue;
+        }
+        if (node.tagName === "TEXTAREA" || (node.querySelector && node.querySelector("textarea"))) {
+          return true;
+        }
+      }
+      return false;
+    }
+    render({ largeEditor }) {
+      this._enabled = Boolean(largeEditor);
+      if (!this._enabled) {
+        document.querySelectorAll(".tex-editor-expand-btn").forEach((el) => el.remove());
+        this._close();
+        return;
+      }
+      document.querySelectorAll("textarea").forEach((textarea) => {
+        if (textarea.closest(".tex-editor-overlay") || [...textarea.classList].some((c) => c.startsWith("tex-"))) {
+          return;
+        }
+        const host = textarea.parentElement;
+        if (!host || host.querySelector(":scope > .tex-editor-expand-btn")) {
+          return;
+        }
+        if (window.getComputedStyle(host).position === "static") {
+          host.style.position = "relative";
+        }
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tex-editor-expand-btn";
+        btn.textContent = "⤢";
+        btn.title = TasyI18n.t("large_editor_open_title");
+        ["mousedown", "pointerdown"].forEach((evt) => btn.addEventListener(evt, (e) => e.stopPropagation()));
+        btn.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          this._open(textarea);
+        });
+        host.appendChild(btn);
+      });
+    }
+    _fieldTitle(textarea) {
+      const container = textarea.closest(".w-attr-container");
+      const label = container?.querySelector(".w-attr-container__label")?.innerText?.trim();
+      const attr = container?.getAttribute("w-attr-name");
+      return [label, attr ? `(${attr})` : ""].filter(Boolean).join(" ") || TasyI18n.t("large_editor_title");
+    }
+    _open(textarea) {
+      this._close();
+      const readOnly = textarea.readOnly || textarea.disabled;
+      const overlay = document.createElement("div");
+      overlay.className = "tex-editor-overlay";
+      overlay.innerHTML = `
+        <div class="tex-editor-dialog" role="dialog" aria-modal="true">
+          <div class="tex-editor-header">
+            <span class="tex-editor-title"></span>
+            <span class="tex-editor-pos"></span>
+          </div>
+          <textarea class="tex-editor-text" spellcheck="false" wrap="off"></textarea>
+          <div class="tex-editor-footer">
+            <span class="tex-editor-hint"></span>
+            <button type="button" class="tex-editor-btn tex-editor-wrap"></button>
+            <button type="button" class="tex-editor-btn tex-editor-copy"></button>
+            <button type="button" class="tex-editor-btn tex-editor-cancel"></button>
+            <button type="button" class="tex-editor-btn tex-editor-apply"></button>
+          </div>
+        </div>`;
+      const editor = overlay.querySelector(".tex-editor-text");
+      const pos = overlay.querySelector(".tex-editor-pos");
+      const wrapBtn = overlay.querySelector(".tex-editor-wrap");
+      const copyBtn = overlay.querySelector(".tex-editor-copy");
+      const cancelBtn = overlay.querySelector(".tex-editor-cancel");
+      const applyBtn = overlay.querySelector(".tex-editor-apply");
+      overlay.querySelector(".tex-editor-title").textContent = this._fieldTitle(textarea);
+      overlay.querySelector(".tex-editor-hint").textContent = TasyI18n.t(
+        readOnly ? "large_editor_readonly" : "large_editor_hint"
+      );
+      wrapBtn.textContent = TasyI18n.t("large_editor_wrap");
+      copyBtn.textContent = TasyI18n.t("btn_copy");
+      cancelBtn.textContent = TasyI18n.t(readOnly ? "large_editor_close" : "large_editor_cancel");
+      applyBtn.textContent = TasyI18n.t("large_editor_apply");
+      applyBtn.hidden = readOnly;
+      editor.value = textarea.value;
+      editor.readOnly = readOnly;
+
+      const updatePos = () => {
+        const before = editor.value.slice(0, editor.selectionStart);
+        const lines = before.split("\n");
+        pos.textContent = TasyI18n.t("large_editor_pos", {
+          line: lines.length,
+          col: lines[lines.length - 1].length + 1,
+          total: editor.value.split("\n").length
+        });
+      };
+      const apply = () => {
+        if (readOnly) {
+          this._close();
+          return;
+        }
+        this._writeBack(textarea, editor.value);
+        this._close();
+      };
+
+      // Keep every keystroke/click inside the overlay away from Tasy's own
+      // global shortcuts and focus traps.
+      ["keydown", "keyup", "keypress", "mousedown", "mouseup", "pointerdown", "click", "focusin"].forEach((evt) =>
+        overlay.addEventListener(evt, (e) => e.stopPropagation())
+      );
+      editor.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          this._close();
+        } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          apply();
+        } else if (e.key === "Tab" && !readOnly) {
+          e.preventDefault();
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+          editor.setRangeText("    ", start, end, "end");
+          updatePos();
+        }
+      });
+      ["keyup", "click", "input", "select"].forEach((evt) => editor.addEventListener(evt, updatePos));
+      wrapBtn.addEventListener("click", () => {
+        const on = editor.getAttribute("wrap") !== "soft";
+        editor.setAttribute("wrap", on ? "soft" : "off");
+        wrapBtn.classList.toggle("active", on);
+      });
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(editor.value).catch(() => { });
+        copyBtn.textContent = TasyI18n.t("btn_copied");
+        window.setTimeout(() => { copyBtn.textContent = TasyI18n.t("btn_copy"); }, 900);
+      });
+      cancelBtn.addEventListener("click", () => this._close());
+      applyBtn.addEventListener("click", apply);
+      overlay.addEventListener("mousedown", (e) => {
+        if (e.target === overlay) {
+          this._close();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      this._overlay = overlay;
+      editor.focus();
+      editor.setSelectionRange(0, 0);
+      editor.scrollTop = 0;
+      updatePos();
+    }
+    _writeBack(textarea, value) {
+      if (textarea.value === value) {
+        return;
+      }
+      try {
+        textarea.focus();
+      } catch (_error) {
+        // ignore
+      }
+      // Native setter so frameworks that wrap `value` still see the change.
+      const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+      if (setter) {
+        setter.call(textarea, value);
+      } else {
+        textarea.value = value;
+      }
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      textarea.dispatchEvent(new Event("change", { bubbles: true }));
+      textarea.dispatchEvent(new Event("blur"));
+      textarea.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    }
+    _close() {
+      if (this._overlay) {
+        this._overlay.remove();
+        this._overlay = null;
+      }
+    }
+  }
+
   manager.add(new FieldDetailsRenderer());
   manager.add(new GridDetailsRenderer());
   manager.add(new PanelDetailsRenderer());
@@ -2034,6 +2227,7 @@
   manager.add(new ErrorCaptureRenderer());
   manager.add(new WaterfallRenderer());
   manager.add(new MenuFilterRenderer());
+  manager.add(new LargeEditorRenderer());
 
   window.addEventListener("message", (event) => {
     if (event.source !== window) {

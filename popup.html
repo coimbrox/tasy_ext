@@ -15,7 +15,10 @@
           <button type="button" id="langPt" class="lang-flag" data-lang="pt" title="Português">🇧🇷</button>
           <button type="button" id="langEn" class="lang-flag" data-lang="en" title="English">🇺🇸</button>
         </div>
-        <a href="manual.html" target="_blank" class="manual-link" title="Ver manual da extensão" data-i18n-title="popup_manual_title" data-i18n="popup_manual_link">📖 Manual</a>
+        <div class="header-links">
+          <a href="manual.html#apoie" target="_blank" class="header-link support-link" title="Apoie o projeto" data-i18n-title="popup_support_title" data-i18n="popup_support_link">☕ Apoie o projeto</a>
+          <a href="manual.html" target="_blank" class="header-link manual-link" title="Ver manual da extensão" data-i18n-title="popup_manual_title" data-i18n="popup_manual_link">📖 Manual</a>
+        </div>
       </div>
 
       <div class="section-title" data-i18n="section_dictionary">Dicionário de dados</div>
@@ -68,6 +71,10 @@
         <label class="checkbox-label">
           <input id="menuFilter" type="checkbox" />
           <span data-i18n="opt_menu_filter">Filtro nos menus (Perfil/Setor)</span>
+        </label>
+        <label class="checkbox-label">
+          <input id="largeEditor" type="checkbox" />
+          <span data-i18n="opt_large_editor">Editor ampliado (campos SQL/texto)</span>
         </label>
       </div>
 

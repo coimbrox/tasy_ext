@@ -18,6 +18,8 @@
     // --- Popup: header / sections -------------------------------------------
     popup_manual_link: { pt: "📖 Manual", en: "📖 Manual" },
     popup_manual_title: { pt: "Ver manual da extensão", en: "View extension manual" },
+    popup_support_link: { pt: "☕ Apoie o projeto", en: "☕ Support the project" },
+    popup_support_title: { pt: "Apoie o projeto", en: "Support the project" },
     section_dictionary: { pt: "Dicionário de dados", en: "Data dictionary" },
     dictionary_search_placeholder: { pt: "Buscar campo, coluna ou tabela...", en: "Search field, column or table..." },
     section_metadata: { pt: "Metadados TASY", en: "TASY metadata" },
@@ -32,6 +34,19 @@
     opt_waterfall: { pt: "Waterfall de rede", en: "Network waterfall" },
     opt_menu_filter: { pt: "Filtro nos menus (Perfil/Setor)", en: "Filter in menus (Profile/Sector)" },
     menu_filter_placeholder: { pt: "Filtrar...", en: "Filter..." },
+    opt_large_editor: { pt: "Editor ampliado (campos SQL/texto)", en: "Large editor (SQL/text fields)" },
+    large_editor_open_title: { pt: "Abrir em editor ampliado", en: "Open in large editor" },
+    large_editor_title: { pt: "Editor ampliado", en: "Large editor" },
+    large_editor_hint: {
+      pt: "Ctrl+Enter aplica · Esc cancela · Tab insere 4 espaços",
+      en: "Ctrl+Enter applies · Esc cancels · Tab inserts 4 spaces"
+    },
+    large_editor_readonly: { pt: "Campo somente leitura", en: "Read-only field" },
+    large_editor_wrap: { pt: "Quebrar linhas", en: "Wrap lines" },
+    large_editor_cancel: { pt: "Cancelar", en: "Cancel" },
+    large_editor_close: { pt: "Fechar", en: "Close" },
+    large_editor_apply: { pt: "Aplicar", en: "Apply" },
+    large_editor_pos: { pt: "Ln {{line}}, Col {{col}} · {{total}} linhas", en: "Ln {{line}}, Col {{col}} · {{total}} lines" },
     btn_clear_recent: { pt: "Limpar recentes", en: "Clear recent" },
     btn_reload_styles: { pt: "Recarregar estilos", en: "Reload styles" },
 

@@ -660,3 +660,137 @@ li.tex-menu-hidden {
 .tex-record-highlight.tex-record-highlight-fade {
   opacity: 0;
 }
+
+/* --- Large editor (expand button + modal) -------------------------------- */
+.tex-editor-expand-btn {
+  position: absolute;
+  top: 4px;
+  right: 18px;
+  z-index: 100;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #0284c7;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #0284c7;
+  font-size: 15px;
+  line-height: 20px;
+  cursor: pointer;
+  opacity: 0.55;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.tex-editor-expand-btn:hover {
+  opacity: 1;
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.tex-editor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.tex-editor-dialog {
+  display: flex;
+  flex-direction: column;
+  width: 92vw;
+  height: 88vh;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.tex-editor-header,
+.tex-editor-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  font-size: 13px;
+  color: #334155;
+}
+
+.tex-editor-header {
+  justify-content: space-between;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tex-editor-title {
+  font-weight: 600;
+}
+
+.tex-editor-pos,
+.tex-editor-hint {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.tex-editor-hint {
+  margin-right: auto;
+}
+
+.tex-editor-text {
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: none;
+  outline: none;
+  resize: none;
+  box-sizing: border-box;
+  font-family: "Consolas", "Courier New", monospace !important;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #0f172a;
+  background: #ffffff;
+  tab-size: 4;
+  white-space: pre;
+  overflow: auto;
+}
+
+.tex-editor-text[wrap="soft"] {
+  white-space: pre-wrap;
+}
+
+.tex-editor-footer {
+  border-top: 1px solid #e2e8f0;
+}
+
+.tex-editor-btn {
+  padding: 6px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tex-editor-btn:hover,
+.tex-editor-btn.active {
+  background: #e2e8f0;
+}
+
+.tex-editor-apply {
+  border-color: #0284c7;
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.tex-editor-apply:hover {
+  background: #0369a1;
+}
+
+.tex-editor-apply[hidden] {
+  display: none;
+}

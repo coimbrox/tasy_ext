@@ -8,6 +8,7 @@ const METADATA_OPTION_KEYS = [
   "showReportLayout",
   "showWaterfall",
   "menuFilter",
+  "largeEditor",
   "captureErrors"
 ];
 const TRACE_ACTIVE_KEY = "traceActive";
