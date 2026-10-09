@@ -16,9 +16,11 @@
 (function (root) {
   const STRINGS = {
     // --- Popup: header / sections -------------------------------------------
+    popup_wiki_link: { pt: "📚 Manuais TASY", en: "📚 TASY Manuals" },
+    popup_wiki_title: { pt: "Manuais do TASY (Wiki de Documentação)", en: "TASY Manuals (Documentation Wiki)" },
     popup_manual_link: { pt: "📖 Manual", en: "📖 Manual" },
     popup_manual_title: { pt: "Ver manual da extensão", en: "View extension manual" },
-    popup_support_link: { pt: "☕ Apoie o projeto", en: "☕ Support the project" },
+    popup_support_link: { pt: "☕ Apoie", en: "☕ Support" },
     popup_support_title: { pt: "Apoie o projeto", en: "Support the project" },
     section_dictionary: { pt: "Dicionário de dados", en: "Data dictionary" },
     dictionary_search_placeholder: { pt: "Buscar campo, coluna ou tabela...", en: "Search field, column or table..." },
