@@ -156,6 +156,14 @@ h1 {
   padding: 10px;
 }
 
+.dark-mode-option {
+  grid-column: span 2;
+  border-top: 1px dashed rgba(15, 23, 42, 0.14);
+  padding-top: 6px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;

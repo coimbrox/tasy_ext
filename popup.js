@@ -9,6 +9,7 @@ const METADATA_OPTION_KEYS = [
   "showWaterfall",
   "menuFilter",
   "largeEditor",
+  "darkMode",
   "captureErrors"
 ];
 const TRACE_ACTIVE_KEY = "traceActive";
@@ -292,8 +293,8 @@ async function getPerformanceTraceLog(limit = 500) {
 }
 
 // The overlay options shown in the "Metadados TASY" grid (captureErrors lives
-// in its own section, so it is not part of "Ativar todos").
-const METADATA_UI_KEYS = METADATA_OPTION_KEYS.filter((key) => key !== "captureErrors");
+// in its own section and darkMode is a theme preference, so neither is part of "Ativar todos").
+const METADATA_UI_KEYS = METADATA_OPTION_KEYS.filter((key) => key !== "captureErrors" && key !== "darkMode");
 const metadataToggleAllEl = document.getElementById("metadataToggleAll");
 
 function refreshMetadataToggleAll() {

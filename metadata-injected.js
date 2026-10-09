@@ -2216,6 +2216,18 @@
     }
   }
 
+  // --- Dark Mode: native CSS theme on documentElement (.tex-dark-theme) ----
+  class DarkModeRenderer extends Renderer {
+    condition() {
+      return false;
+    }
+    render({ darkMode }) {
+      if (document.documentElement) {
+        document.documentElement.classList.toggle("tex-dark-theme", Boolean(darkMode));
+      }
+    }
+  }
+
   manager.add(new FieldDetailsRenderer());
   manager.add(new GridDetailsRenderer());
   manager.add(new PanelDetailsRenderer());
@@ -2228,6 +2240,7 @@
   manager.add(new WaterfallRenderer());
   manager.add(new MenuFilterRenderer());
   manager.add(new LargeEditorRenderer());
+  manager.add(new DarkModeRenderer());
 
   window.addEventListener("message", (event) => {
     if (event.source !== window) {

@@ -794,3 +794,431 @@ li.tex-menu-hidden {
 .tex-editor-apply[hidden] {
   display: none;
 }
+
+/* ==========================================================================
+   MODO ESCURO NATIVO TASY HTML5 (.tex-dark-theme)
+   Paleta refinada Slate/Sky, preservando fotos de pacientes, imagens diagnósticas
+   e cores de triagem clínica (Manchester).
+   ========================================================================== */
+
+html.tex-dark-theme {
+  color-scheme: dark !important;
+}
+
+/* --- Raiz, Corpo e Estrutura Principal ----------------------------------- */
+html.tex-dark-theme,
+html.tex-dark-theme body {
+  background-color: #0b1120 !important;
+  color: #f1f5f9 !important;
+}
+
+html.tex-dark-theme .w-app,
+html.tex-dark-theme .w-workspace,
+html.tex-dark-theme .w-main,
+html.tex-dark-theme .w-view,
+html.tex-dark-theme .w-viewport,
+html.tex-dark-theme .w-shell,
+html.tex-dark-theme .w-body,
+html.tex-dark-theme .w-content,
+html.tex-dark-theme .w-layout,
+html.tex-dark-theme .w-scroller,
+html.tex-dark-theme .w-scrollable,
+html.tex-dark-theme .w-dock,
+html.tex-dark-theme .w-launcher,
+html.tex-dark-theme .w-page {
+  background-color: #0b1120 !important;
+  color: #f1f5f9 !important;
+}
+
+/* --- Cabeçalhos, Barra Superior, Navegação e Rodapé ----------------------- */
+html.tex-dark-theme .w-header,
+html.tex-dark-theme .w-app__header,
+html.tex-dark-theme .w-app-header,
+html.tex-dark-theme .w-topbar,
+html.tex-dark-theme .w-navbar,
+html.tex-dark-theme .w-menubar,
+html.tex-dark-theme .w-navigation,
+html.tex-dark-theme .w-footer,
+html.tex-dark-theme .w-statusbar,
+html.tex-dark-theme .w-bottom-bar {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+html.tex-dark-theme .w-header h1,
+html.tex-dark-theme .w-header h2,
+html.tex-dark-theme .w-header h3,
+html.tex-dark-theme .w-title,
+html.tex-dark-theme .w-app__title,
+html.tex-dark-theme .w-launcher__title {
+  color: #f8fafc !important;
+}
+
+/* --- Painéis, Cards, Grupos e Estrutura de Telas -------------------------- */
+html.tex-dark-theme .w-panel,
+html.tex-dark-theme .w-panel__container,
+html.tex-dark-theme .w-panel__content,
+html.tex-dark-theme .w-panel__body,
+html.tex-dark-theme .w-card,
+html.tex-dark-theme .w-card__content,
+html.tex-dark-theme .w-box,
+html.tex-dark-theme .w-section,
+html.tex-dark-theme .w-group,
+html.tex-dark-theme .w-fieldset,
+html.tex-dark-theme .w-mdetail,
+html.tex-dark-theme .w-mdetail__container,
+html.tex-dark-theme .w-attr-container {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+html.tex-dark-theme .w-panel__header,
+html.tex-dark-theme .w-fieldset__legend,
+html.tex-dark-theme .w-card__header,
+html.tex-dark-theme .w-mdetail__header {
+  background-color: #0f172a !important;
+  color: #38bdf8 !important;
+  border-color: #334155 !important;
+}
+
+html.tex-dark-theme .w-panel__footer,
+html.tex-dark-theme .w-card__footer {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+/* --- Formulários, Caixas de Texto, Dropdowns e Lookups -------------------- */
+html.tex-dark-theme input[type="text"],
+html.tex-dark-theme input[type="password"],
+html.tex-dark-theme input[type="number"],
+html.tex-dark-theme input[type="search"],
+html.tex-dark-theme input[type="email"],
+html.tex-dark-theme input[type="tel"],
+html.tex-dark-theme input[type="date"],
+html.tex-dark-theme input[type="datetime-local"],
+html.tex-dark-theme input[type="time"],
+html.tex-dark-theme textarea,
+html.tex-dark-theme select,
+html.tex-dark-theme .w-textbox,
+html.tex-dark-theme .w-textbox input,
+html.tex-dark-theme .w-textbox textarea,
+html.tex-dark-theme .w-textarea,
+html.tex-dark-theme .w-combobox,
+html.tex-dark-theme .w-combobox input,
+html.tex-dark-theme .w-lookup,
+html.tex-dark-theme .w-lookup input,
+html.tex-dark-theme .w-datebox,
+html.tex-dark-theme .w-datebox input,
+html.tex-dark-theme .w-listbox,
+html.tex-dark-theme .w-custom-select,
+html.tex-dark-theme .w-calendar {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+html.tex-dark-theme input::placeholder,
+html.tex-dark-theme textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.tex-dark-theme input:focus,
+html.tex-dark-theme textarea:focus,
+html.tex-dark-theme select:focus,
+html.tex-dark-theme .w-textbox--focused,
+html.tex-dark-theme .w-combobox--focused,
+html.tex-dark-theme .w-lookup--focused {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25) !important;
+  outline: none !important;
+}
+
+html.tex-dark-theme input:disabled,
+html.tex-dark-theme textarea:disabled,
+html.tex-dark-theme select:disabled,
+html.tex-dark-theme .w-textbox--disabled,
+html.tex-dark-theme .w-disabled {
+  background-color: #1e293b !important;
+  color: #64748b !important;
+  border-color: #334155 !important;
+  opacity: 0.7 !important;
+}
+
+html.tex-dark-theme label,
+html.tex-dark-theme .w-label,
+html.tex-dark-theme .w-attr-container__label,
+html.tex-dark-theme .w-attr-label,
+html.tex-dark-theme .w-form-label {
+  color: #cbd5e1 !important;
+}
+
+/* --- Grids e Tabelas (SlickGrid, HTML Tables) ----------------------------- */
+html.tex-dark-theme .w-grid,
+html.tex-dark-theme .w-grid__container,
+html.tex-dark-theme .w-grid__viewport,
+html.tex-dark-theme .slick-viewport,
+html.tex-dark-theme .grid-canvas,
+html.tex-dark-theme table {
+  background-color: #0b1120 !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+html.tex-dark-theme .w-grid__header,
+html.tex-dark-theme .w-grid__col-header,
+html.tex-dark-theme .slick-header,
+html.tex-dark-theme .slick-header-columns,
+html.tex-dark-theme .slick-header-column,
+html.tex-dark-theme thead th,
+html.tex-dark-theme th {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+  font-weight: 600 !important;
+}
+
+html.tex-dark-theme .w-grid__row,
+html.tex-dark-theme .slick-row,
+html.tex-dark-theme tbody tr {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+html.tex-dark-theme .w-grid__row--alternate,
+html.tex-dark-theme .slick-row.odd,
+html.tex-dark-theme tbody tr:nth-child(even) {
+  background-color: #182234 !important;
+}
+
+html.tex-dark-theme .w-grid__row:hover,
+html.tex-dark-theme .slick-row:hover,
+html.tex-dark-theme tbody tr:hover {
+  background-color: #273549 !important;
+}
+
+html.tex-dark-theme .w-grid__row--selected,
+html.tex-dark-theme .slick-row.active,
+html.tex-dark-theme tbody tr.selected {
+  background-color: #0369a1 !important;
+  color: #ffffff !important;
+}
+
+html.tex-dark-theme .w-grid__cell,
+html.tex-dark-theme .slick-cell,
+html.tex-dark-theme td {
+  border-color: #334155 !important;
+  color: inherit !important;
+}
+
+html.tex-dark-theme .w-grid__footer,
+html.tex-dark-theme .w-pager,
+html.tex-dark-theme .w-pagination,
+html.tex-dark-theme .pagination {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* --- Abas (Tabs) --------------------------------------------------------- */
+html.tex-dark-theme .w-tabs,
+html.tex-dark-theme .w-tabs__header,
+html.tex-dark-theme .w-tab-bar,
+html.tex-dark-theme .nav-tabs {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+html.tex-dark-theme .w-tabs__tab,
+html.tex-dark-theme .w-tabs__item,
+html.tex-dark-theme .nav-tabs > li > a {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+html.tex-dark-theme .w-tabs__tab--active,
+html.tex-dark-theme .w-tabs__tab.active,
+html.tex-dark-theme .w-tabs__item--active,
+html.tex-dark-theme .nav-tabs > li.active > a {
+  background-color: #0b1120 !important;
+  color: #38bdf8 !important;
+  border-bottom: 2px solid #38bdf8 !important;
+}
+
+/* --- Botões e Ações ------------------------------------------------------ */
+html.tex-dark-theme .w-button,
+html.tex-dark-theme .w-btn,
+html.tex-dark-theme .btn,
+html.tex-dark-theme button:not(.tex-editor-apply):not(.tex-editor-btn):not(.tex-btn):not(.tex-env-badge):not(.tex-scope-close):not(.tex-waterfall-close) {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+}
+
+html.tex-dark-theme .w-button:hover,
+html.tex-dark-theme .w-btn:hover,
+html.tex-dark-theme .btn:hover,
+html.tex-dark-theme button:not(.tex-editor-apply):not(.tex-editor-btn):not(.tex-btn):not(.tex-env-badge):not(.tex-scope-close):not(.tex-waterfall-close):hover {
+  background-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+html.tex-dark-theme .w-button--primary,
+html.tex-dark-theme .w-btn-primary,
+html.tex-dark-theme .btn-primary {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+
+html.tex-dark-theme .w-button--primary:hover,
+html.tex-dark-theme .w-btn-primary:hover,
+html.tex-dark-theme .btn-primary:hover {
+  background-color: #0369a1 !important;
+}
+
+/* Ícones do Tasy */
+html.tex-dark-theme .w-icon,
+html.tex-dark-theme [class*="w-icon-"],
+html.tex-dark-theme i[class*="fa-"],
+html.tex-dark-theme span.glyphicon {
+  color: #94a3b8;
+}
+
+html.tex-dark-theme .w-button:hover .w-icon,
+html.tex-dark-theme .w-button:hover [class*="w-icon-"],
+html.tex-dark-theme .w-button:hover i[class*="fa-"] {
+  color: #ffffff;
+}
+
+/* --- Menus Suspensos, Diálogos, Janelas e Modais -------------------------- */
+html.tex-dark-theme .w-dialog,
+html.tex-dark-theme .w-modal,
+html.tex-dark-theme .w-window,
+html.tex-dark-theme .w-popup,
+html.tex-dark-theme .wpopupmenu,
+html.tex-dark-theme .wpopupmenu__viewport,
+html.tex-dark-theme .w-menu-dropdown,
+html.tex-dark-theme .dropdown-menu,
+html.tex-dark-theme .modal-content {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+}
+
+html.tex-dark-theme .wpopupmenu li,
+html.tex-dark-theme .dropdown-menu > li > a,
+html.tex-dark-theme .w-listbox__item {
+  color: #e2e8f0 !important;
+}
+
+html.tex-dark-theme .wpopupmenu li:hover,
+html.tex-dark-theme .dropdown-menu > li > a:hover,
+html.tex-dark-theme .w-listbox__item:hover {
+  background-color: #334155 !important;
+  color: #38bdf8 !important;
+}
+
+/* --- Editor Ampliado no Modo Escuro -------------------------------------- */
+html.tex-dark-theme .tex-editor-dialog {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+html.tex-dark-theme .tex-editor-header,
+html.tex-dark-theme .tex-editor-footer {
+  border-color: #334155 !important;
+  background-color: #0f172a !important;
+}
+
+html.tex-dark-theme .tex-editor-title {
+  color: #f8fafc !important;
+}
+
+html.tex-dark-theme .tex-editor-pos,
+html.tex-dark-theme .tex-editor-hint {
+  color: #94a3b8 !important;
+}
+
+html.tex-dark-theme .tex-editor-text {
+  background-color: #0b1120 !important;
+  color: #f1f5f9 !important;
+}
+
+html.tex-dark-theme .tex-editor-btn {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+
+html.tex-dark-theme .tex-editor-btn:hover,
+html.tex-dark-theme .tex-editor-btn.active {
+  background-color: #475569 !important;
+}
+
+html.tex-dark-theme .tex-editor-apply {
+  background-color: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+html.tex-dark-theme .tex-editor-apply:hover {
+  background-color: #0369a1 !important;
+}
+
+/* --- Barra de Rolagem Elegante (Scrollbars) ------------------------------ */
+html.tex-dark-theme ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+html.tex-dark-theme ::-webkit-scrollbar-track {
+  background: #0b1120;
+}
+
+html.tex-dark-theme ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+  border: 2px solid #0b1120;
+}
+
+html.tex-dark-theme ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* --- SEGURANÇA CLÍNICA (Fotos, Exames, Manchester, Sinais Vitais) -------- */
+
+/* Fotos de pacientes, imagens diagnósticas, ECG, raio-X, anexos e mídias */
+html.tex-dark-theme img,
+html.tex-dark-theme picture,
+html.tex-dark-theme canvas,
+html.tex-dark-theme video,
+html.tex-dark-theme svg,
+html.tex-dark-theme iframe,
+html.tex-dark-theme embed,
+html.tex-dark-theme object,
+html.tex-dark-theme .w-patient-photo,
+html.tex-dark-theme .w-avatar {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Triagem de Manchester e alertas clínicos (vermelho, laranja, amarelo, verde, azul) */
+html.tex-dark-theme [class*="manchester"],
+html.tex-dark-theme [class*="triagem"],
+html.tex-dark-theme [class*="alert-danger"],
+html.tex-dark-theme [class*="alert-warning"],
+html.tex-dark-theme [class*="alert-success"],
+html.tex-dark-theme [class*="alert-info"],
+html.tex-dark-theme [class*="badge-danger"],
+html.tex-dark-theme [class*="badge-warning"],
+html.tex-dark-theme [class*="badge-success"],
+html.tex-dark-theme [class*="badge-info"] {
+  filter: none !important;
+}
+

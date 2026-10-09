@@ -37,6 +37,7 @@
     opt_menu_filter: { pt: "Filtro nos menus (Perfil/Setor)", en: "Filter in menus (Profile/Sector)" },
     menu_filter_placeholder: { pt: "Filtrar...", en: "Filter..." },
     opt_large_editor: { pt: "Editor ampliado (campos SQL/texto)", en: "Large editor (SQL/text fields)" },
+    opt_dark_mode: { pt: "Modo escuro (Dark Mode)", en: "Dark Mode" },
     large_editor_open_title: { pt: "Abrir em editor ampliado", en: "Open in large editor" },
     large_editor_title: { pt: "Editor ampliado", en: "Large editor" },
     large_editor_hint: {

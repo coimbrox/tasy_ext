@@ -452,6 +452,7 @@ const METADATA_OPTION_KEYS = [
   "showWaterfall",
   "menuFilter",
   "largeEditor",
+  "darkMode",
   "captureErrors"
 ];
 const RECENT_FEATURES_KEY = "recentFeatures";
@@ -498,6 +499,9 @@ async function sendMetadataOptions() {
   METADATA_OPTION_KEYS.forEach((key) => {
     options[key] = Boolean(data[key]);
   });
+  if (document.documentElement) {
+    document.documentElement.classList.toggle("tex-dark-theme", Boolean(options.darkMode));
+  }
   options.recentFeatures = Array.isArray(data[RECENT_FEATURES_KEY]) ? data[RECENT_FEATURES_KEY] : [];
   options.environmentRules = Array.isArray(data[ENVIRONMENT_RULES_KEY]) ? data[ENVIRONMENT_RULES_KEY] : [];
   options.serverNode = serverNodeInfo ? { name: serverNodeInfo.name, node: serverNodeInfo.node } : null;
